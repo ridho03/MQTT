@@ -27,6 +27,7 @@ class CarbonCredit extends Model
         'status',
         'sale_price_per_unit',
         'quantity_to_sell',
+        'quantity_to_buy',
         'sale_requested_at',
         'sale_approved_at',
         // Kolom baru untuk MQTT integration

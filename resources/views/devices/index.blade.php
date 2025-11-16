@@ -72,10 +72,7 @@
                     <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span class="text-sm text-gray-600">Aktif</span>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <span class="text-sm text-gray-600">Terdaftar</span>
-                </div>
+                {{-- Legend Terdaftar dihapus --}}
                 <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
                     <span class="text-sm text-gray-600">Belum Ada Device</span>
@@ -87,13 +84,25 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pemilik</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device ID</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terdaftar</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Kendaraan
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pemilik
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Device ID
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Threshold
+                        </th>
+                        {{-- Kolom "Terdaftar" dihapus --}}
+                        <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Aksi
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -116,7 +125,9 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             @if($credit->device_id)
-                                <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{{ $credit->device_id }}</span>
+                                <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                                    {{ $credit->device_id }}
+                                </span>
                             @else
                                 <span class="text-gray-400 text-sm">Belum terdaftar</span>
                             @endif
@@ -144,40 +155,57 @@
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {{ $credit->emission_threshold_kg ? number_format($credit->emission_threshold_kg, 1) . ' kg/hari' : '-' }}
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                            {{ $credit->device_registered_at ? $credit->device_registered_at->format('d/m/Y') : '-' }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="flex items-center space-x-2">
+
+                        {{-- Kolom Terdaftar DIHAPUS --}}
+
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-2">
+
                                 @if($credit->device_id)
-                                    <!-- Device sudah terdaftar -->
+                                    {{-- DETAIL --}}
                                     <a href="{{ route('devices.show', $credit) }}" 
                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                         Detail
                                     </a>
+
                                     <span class="text-gray-300">|</span>
+
+                                    {{-- EDIT --}}
                                     <a href="{{ route('devices.edit', $credit) }}" 
                                        class="text-green-600 hover:text-green-800 text-sm font-medium">
                                         Edit
                                     </a>
+
                                     <span class="text-gray-300">|</span>
-                                    <button onclick="generateQrCode('{{ $credit->id }}')" 
-                                            class="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                                        QR Code
-                                    </button>
+
+                                    {{-- HAPUS --}}
+                                    <form action="{{ route('devices.destroy', $credit) }}" 
+                                          method="POST" 
+                                          onsubmit="return confirm('Yakin menghapus device ini?')"
+                                          class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                            Hapus
+                                        </button>
+                                    </form>
+
                                 @else
-                                    <!-- Device belum terdaftar -->
+                                    {{-- Device belum terdaftar --}}
                                     <a href="{{ route('devices.create', $credit) }}" 
                                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium">
                                         Daftarkan Device
                                     </a>
                                 @endif
+
                             </div>
                         </td>
+
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-8 text-gray-500">
+                        <td colspan="6" class="text-center py-8 text-gray-500">
                             <i class="fas fa-car text-4xl text-gray-300 mb-2"></i>
                             <p>Belum ada kendaraan terdaftar</p>
                             <a href="{{ route('carbon-credits.create') }}" class="text-blue-600 hover:text-blue-800 font-medium">
@@ -192,76 +220,5 @@
     </div>
 </div>
 
-<!-- QR Code Modal -->
-<div id="qrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">QR Code Setup Device</h3>
-                    <button onclick="closeQrModal()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="qrContent" class="text-center">
-                    <!-- QR code will be generated here -->
-                </div>
-                <div class="mt-4 text-sm text-gray-600">
-                    <p><strong>Instruksi:</strong></p>
-                    <ol class="list-decimal list-inside space-y-1 mt-2">
-                        <li>Scan QR code dengan device sensor</li>
-                        <li>Device akan otomatis terkonfigurasi</li>
-                        <li>Pasang device pada kendaraan</li>
-                        <li>Tunggu status berubah menjadi "active"</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-@endsection
-
-@section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script>
-function generateQrCode(creditId) {
-    fetch(`/devices/${creditId}/qr-code`)
-        .then(response => response.json())
-        .then(data => {
-            const qrContent = document.getElementById('qrContent');
-            qrContent.innerHTML = '<canvas id="qrCanvas"></canvas>';
-            
-            const canvas = document.getElementById('qrCanvas');
-            QRCode.toCanvas(canvas, data.setup_url, {
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, function (error) {
-                if (error) {
-                    console.error(error);
-                    qrContent.innerHTML = '<p class="text-red-600">Error generating QR code</p>';
-                } else {
-                    const setupUrl = document.createElement('p');
-                    setupUrl.className = 'mt-3 text-xs text-gray-500 break-all';
-                    setupUrl.textContent = data.setup_url;
-                    qrContent.appendChild(setupUrl);
-                }
-            });
-            
-            document.getElementById('qrModal').classList.remove('hidden');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error generating QR code');
-        });
-}
-
-function closeQrModal() {
-    document.getElementById('qrModal').classList.add('hidden');
-}
-</script>
+{{-- QR modal & script tetap, karena sekarang tombol QR sudah tidak dipakai, ini opsional kalau nanti mau dipakai lagi --}}
 @endsection

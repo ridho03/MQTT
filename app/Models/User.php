@@ -7,6 +7,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+// IMPORT model lain yang dipakai di relasi
+use App\Models\CarbonCredit;
+use App\Models\Transaction;
+use App\Models\Payout;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -27,7 +32,7 @@ class User extends Authenticatable
         'phone_number',
         'address',
         'bank_account',
-        'bank_name',  
+        'bank_name',
     ];
 
     /**
@@ -53,14 +58,19 @@ class User extends Authenticatable
         ];
     }
 
+    // ---- RELASI ----
+
+    // Semua carbon credit milik user
     public function carbonCredits()
     {
         return $this->hasMany(CarbonCredit::class, 'owner_id');
     }
 
+    // Alias kalau mau sebut sebagai "vehicles"
     public function vehicles()
     {
-        return $this->hasMany(CarbonCredit::class, 'owner_id')->whereNotNull('vehicle_type');
+        return $this->hasMany(CarbonCredit::class, 'owner_id')
+                    ->whereNotNull('vehicle_type');
     }
 
     public function soldTransactions()

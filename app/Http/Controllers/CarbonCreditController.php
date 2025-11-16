@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\Log;
 
 class CarbonCreditController extends Controller
 {
+    /* ================================
+     * LIST & CRUD DASAR
+     * ================================ */
+
     public function index()
     {
-        if (Auth::user()->role == 'admin') {
+        if (Auth::user()->role === 'admin') {
             $carbonCredits = CarbonCredit::with('owner')
                 ->where('owner_id', '!=', Auth::id())
                 ->latest()
@@ -27,15 +31,15 @@ class CarbonCreditController extends Controller
 
     public function vehicles()
     {
-        if (Auth::user()->role == 'admin') {
-            $vehicles = CarbonCredit::with(['owner' => function($query) {
-                $query->where('role', '!=', 'admin');
-            }])
-            ->whereHas('owner', function($query) {
-                $query->where('role', '!=', 'admin');
-            })
-            ->latest()
-            ->paginate(10);
+        if (Auth::user()->role === 'admin') {
+            $vehicles = CarbonCredit::with(['owner' => function ($query) {
+                    $query->where('role', '!=', 'admin');
+                }])
+                ->whereHas('owner', function ($query) {
+                    $query->where('role', '!=', 'admin');
+                })
+                ->latest()
+                ->paginate(10);
         } else {
             $vehicles = CarbonCredit::where('owner_id', Auth::id())
                 ->latest()
@@ -53,30 +57,28 @@ class CarbonCreditController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pemilik_kendaraan' => 'required|in:milik sendiri,milik keluarga satu kk',
-            'nrkb' => 'required|string|max:255',
+            'pemilik_kendaraan'   => 'required|in:milik sendiri,milik keluarga satu kk',
+            'nrkb'                => 'required|string|max:255',
             'nomor_rangka_5digit' => 'required|string|size:5',
-            'vehicle_type' => 'required|in:car,motorcycle',
+            'vehicle_type'        => 'required|in:car,motorcycle',
         ]);
 
-        $validated['owner_id'] = Auth::id();
-        $validated['status'] = Auth::user()->role == 'admin' ? 'available' : 'pending';
-        $validated['price_per_unit'] = 100; // Set fixed price per unit to 100
+        $validated['owner_id']       = Auth::id();
+        $validated['status']         = Auth::user()->role === 'admin' ? 'available' : 'pending';
+        $validated['price_per_unit'] = 100; // harga per unit tetap
 
-        // Set nomor_kartu_keluarga and nik_e_ktp based on pemilik_kendaraan
+        // Set KK & NIK
         $user = Auth::user();
         if ($validated['pemilik_kendaraan'] === 'milik sendiri') {
             $validated['nomor_kartu_keluarga'] = $user->nomor_kartu_keluarga;
-            $validated['nik_e_ktp'] = $user->nik_e_ktp;
+            $validated['nik_e_ktp']            = $user->nik_e_ktp;
         } elseif ($validated['pemilik_kendaraan'] === 'milik keluarga satu kk') {
             $validated['nomor_kartu_keluarga'] = $user->nomor_kartu_keluarga;
-            $validated['nik_e_ktp'] = $request->input('nik_e_ktp');
+            $validated['nik_e_ktp']            = $request->input('nik_e_ktp');
         } else {
             $validated['nomor_kartu_keluarga'] = $request->input('nomor_kartu_keluarga');
-            $validated['nik_e_ktp'] = $request->input('nik_e_ktp');
+            $validated['nik_e_ktp']            = $request->input('nik_e_ktp');
         }
-
-        // Do not set amount here; will be set on approval
 
         CarbonCredit::create($validated);
 
@@ -86,7 +88,7 @@ class CarbonCreditController extends Controller
 
     public function show(CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin' && $carbonCredit->owner_id !== Auth::id()) {
+        if (Auth::user()->role !== 'admin' && $carbonCredit->owner_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -95,7 +97,7 @@ class CarbonCreditController extends Controller
 
     public function edit(CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin' && $carbonCredit->owner_id !== Auth::id()) {
+        if (Auth::user()->role !== 'admin' && $carbonCredit->owner_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -104,27 +106,24 @@ class CarbonCreditController extends Controller
 
     public function update(Request $request, CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin' && $carbonCredit->owner_id !== Auth::id()) {
+        if (Auth::user()->role !== 'admin' && $carbonCredit->owner_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
         $validated = $request->validate([
             'nomor_kartu_keluarga' => 'required|string|max:255',
-            'pemilik_kendaraan' => 'required|in:milik sendiri,milik keluarga satu kk',
-            'nik_e_ktp' => 'required|string|max:255',
-            'nrkb' => 'required|string|max:255',
-            'nomor_rangka_5digit' => 'required|string|size:5',
-            'vehicle_type' => 'required|in:car,motorcycle',
+            'pemilik_kendaraan'    => 'required|in:milik sendiri,milik keluarga satu kk',
+            'nik_e_ktp'            => 'required|string|max:255',
+            'nrkb'                 => 'required|string|max:255',
+            'nomor_rangka_5digit'  => 'required|string|size:5',
+            'vehicle_type'         => 'required|in:car,motorcycle',
         ]);
 
-        // Set fixed price per unit to 100
         $validated['price_per_unit'] = 100;
 
-        if (Auth::user()->role == 'admin') {
+        if (Auth::user()->role === 'admin') {
             $validated['status'] = $request->status;
         }
-
-        // Do not update amount here; amount is set on approval
 
         $carbonCredit->update($validated);
 
@@ -134,31 +133,30 @@ class CarbonCreditController extends Controller
 
     public function approve(CarbonCredit $carbonCredit)
     {
-    
-        if (Auth::user()->role != 'admin') {
-        abort(403, 'Unauthorized action.');
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
         }
-        
-        // Assign initial quota based on vehicle_type
+
+        // Kuota awal berdasarkan jenis kendaraan
         $initialQuota = 0;
         if ($carbonCredit->vehicle_type === 'car') {
-            $initialQuota = 800; // 800 kg CO2eq
+            $initialQuota = 800; // kg CO2eq
         } elseif ($carbonCredit->vehicle_type === 'motorcycle') {
-            $initialQuota = 500; // 500 kg CO2eq
+            $initialQuota = 500; // kg CO2eq
         }
 
         $carbonCredit->update([
             'status' => 'available',
             'amount' => $initialQuota,
         ]);
-        
+
         return redirect()->route('carbon-credits.index')
             ->with('success', 'Kuota karbon berhasil disetujui dan kuota awal telah diberikan.');
     }
 
     public function reject(CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin') {
+        if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
@@ -170,7 +168,7 @@ class CarbonCreditController extends Controller
 
     public function setAvailable(CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin') {
+        if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
@@ -180,67 +178,98 @@ class CarbonCreditController extends Controller
             ->with('success', 'Kuota karbon tersedia untuk dijual.');
     }
 
-    /**
-     * Show form to request marketplace listing
-     */
+    /* ================================
+     * USER – AJUKAN JUAL
+     * ================================ */
+
+    // Tampilkan form JUAL
     public function requestSale(CarbonCredit $carbonCredit)
     {
-        // Method yang sudah ada - untuk menampilkan form
-        if (Auth::user()->role != 'admin' && $carbonCredit->owner_id != Auth::id()) {
-            abort(403, 'Unauthorized action.');
+        if (auth()->id() !== $carbonCredit->owner_id) {
+            abort(403, 'Anda tidak berhak mengajukan penjualan kuota ini.');
         }
 
-        if ($carbonCredit->status !== 'available') {
+        if ($carbonCredit->status !== 'available' && $carbonCredit->status !== 'approved') {
             return redirect()->route('carbon-credits.index')
-                ->with('error', 'Hanya kuota karbon yang tersedia yang dapat diajukan untuk dijual.');
+                ->with('error', 'Kuota ini belum bisa dijual.');
         }
 
         return view('carbon_credits.request_sale', compact('carbonCredit'));
     }
 
+    // Terima form JUAL
     public function submitSaleRequest(Request $request, CarbonCredit $carbonCredit)
-{
-    // Cek authorization
-    if (Auth::user()->role != 'admin' && $carbonCredit->owner_id != Auth::id()) {
-        abort(403, 'Unauthorized action.');
+    {
+        if (auth()->id() !== $carbonCredit->owner_id) {
+            abort(403, 'Anda tidak berhak mengajukan penjualan.');
+        }
+
+        $request->validate([
+            'quantity_to_sell' => 'required|numeric|min:0.01',
+        ]);
+
+        $effective = $carbonCredit->effective_quota;
+
+        if ($request->quantity_to_sell > $effective) {
+            return back()->with('error', 'Jumlah yang ingin dijual melebihi kuota efektif yang tersedia.');
+        }
+
+        $carbonCredit->update([
+            'status'              => 'pending_sale',
+            'quantity_to_sell'    => $request->quantity_to_sell,
+            'sale_price_per_unit' => $carbonCredit->price_per_unit ?? 100,
+            'sale_requested_at'   => now(),
+        ]);
+
+        return redirect()
+            ->route('carbon-credits.index')
+            ->with('success', 'Permintaan penjualan berhasil diajukan. Menunggu persetujuan admin.');
     }
 
-    // Validasi request dengan nama field yang sesuai
-    $request->validate([
-        'quantity_to_sell' => 'required|numeric|min:0.01',
-    ]);
+    /* ================================
+     * USER – AJUKAN BELI
+     * ================================ */
 
-    // Ensure quantity doesn't exceed effective quota
-    $effective = $carbonCredit->effective_quota;
-    if ($request->quantity_to_sell > $effective) {
-        return back()->with('error', 'Kuota yang diajukan melebihi kuota yang tersedia untuk dijual.');
+    // Tampilkan form BELI
+    public function requestBuy(CarbonCredit $carbonCredit)
+    {
+        // Hanya pemilik kendaraan yang boleh beli kuota ekstra
+        if (auth()->id() !== $carbonCredit->owner_id) {
+            abort(403, 'Anda tidak berhak mengajukan pembelian untuk kendaraan ini.');
+        }
+
+        return view('carbon_credits.request_buy', compact('carbonCredit'));
     }
 
-    // Update dengan field yang sesuai dengan approveSaleRequest
-    $carbonCredit->update([
-        'status' => 'pending_sale',
-        'sale_price_per_unit' => 100, // Set fixed sale price per unit to 100
-        'quantity_to_sell' => min($request->quantity_to_sell, $effective),
-        'sale_requested_at' => now(),
-    ]);
+    // Terima form BELI
+    public function submitBuyRequest(Request $request, CarbonCredit $carbonCredit)
+    {
+        if (auth()->id() !== $carbonCredit->owner_id) {
+            abort(403, 'Anda tidak berhak mengajukan pembelian kuota ini.');
+        }
 
-    Log::info('Proses pengajuan penjualan berhasil dilakukan', [
-        'carbon_credit_id' => $carbonCredit->id,
-        'user_id' => Auth::id(),
-        'quantity_to_sell' => $carbonCredit->quantity_to_sell,
-        'sale_price_per_unit' => $carbonCredit->sale_price_per_unit,
-        'sale_requested_at' => $carbonCredit->sale_requested_at,
-    ]);
+        $request->validate([
+            'quantity_to_buy' => 'required|numeric|min:0.01',
+        ]);
 
-    return redirect()->route('carbon-credits.index')
-        ->with('success', 'Permintaan penjualan berhasil diajukan.');
-}
+        $carbonCredit->update([
+            'status'           => 'pending_buy',
+            'quantity_to_buy'  => $request->quantity_to_buy,
+            'buy_requested_at' => now(),
+        ]);
 
+        return redirect()
+            ->route('carbon-credits.index')
+            ->with('success', 'Permintaan pembelian kuota telah dikirim ke admin.');
+    }
 
+    /* ================================
+     * ADMIN – APPROVE PENJUALAN
+     * ================================ */
 
     public function approveSaleRequest(CarbonCredit $carbonCredit)
     {
-        if (Auth::user()->role != 'admin') {
+        if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
@@ -249,33 +278,167 @@ class CarbonCreditController extends Controller
                 ->with('error', 'Kuota karbon ini tidak dalam status menunggu persetujuan penjualan.');
         }
 
-        // Recalculate effective quota at approval time and cap quantity_to_sell to ensure validity
+        // Hitung ulang kuota efektif & batasi quantity_to_sell
         $effectiveQuota = $carbonCredit->effective_quota;
         $cappedQuantity = min($carbonCredit->quantity_to_sell, $effectiveQuota);
 
-        if ($cappedQuantity < $carbonCredit->quantity_to_sell) {
-            \Illuminate\Support\Facades\Log::warning("Capped quantity_to_sell for carbon credit {$carbonCredit->id} due to emissions: {$carbonCredit->quantity_to_sell} -> {$cappedQuantity}");
-        }
+        // Kurangi kuota pemilik
+        $currentAmount = $carbonCredit->amount ?? 0;
+        $newAmount     = max(0, $currentAmount - $cappedQuantity);
 
         $carbonCredit->update([
-            'status' => 'available',
+            'status'           => 'available',
             'sale_approved_at' => now(),
-            // Update harga sesuai pengajuan
-            'price_per_unit' => $carbonCredit->sale_price_per_unit,
-            'quantity_to_sell' => $cappedQuantity,
-            // 'amount' => $carbonCredit->quantity_to_sell, // removed to keep amount unchanged
+            'price_per_unit'   => $carbonCredit->sale_price_per_unit ?? $carbonCredit->price_per_unit,
+            'quantity_to_sell' => 0,
+            'amount'           => $newAmount,
         ]);
 
         Log::info('Pengajuan penjualan disetujui oleh admin', [
             'carbon_credit_id' => $carbonCredit->id,
-            'admin_id' => Auth::id(),
-            'quantity_to_sell' => $cappedQuantity,
-            'price_per_unit' => $carbonCredit->price_per_unit,
-            'sale_approved_at' => $carbonCredit->sale_approved_at,
+            'admin_id'         => Auth::id(),
+            'old_amount'       => $currentAmount,
+            'sold_quantity'    => $cappedQuantity,
+            'new_amount'       => $newAmount,
         ]);
 
         return redirect()->route('carbon-credits.index')
-            ->with('success', 'Pengajuan penjualan disetujui. Kuota karbon sekarang tersedia di marketplace.');
+            ->with('success', 'Pengajuan penjualan disetujui dan kuota pemilik telah dikurangi.');
     }
 
+    /* ================================
+     * PANEL ADMIN JUAL & BELI
+     * ================================ */
+
+    public function adminTradePanel()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $pendingSales = CarbonCredit::with('owner')
+            ->where('status', 'pending_sale')
+            ->orderByDesc('sale_requested_at')
+            ->get();
+
+        $pendingBuys = CarbonCredit::with('owner')
+            ->where('status', 'pending_buy')
+            ->orderByDesc('buy_requested_at')
+            ->get();
+
+        return view('admin.trade_panel', compact('pendingSales', 'pendingBuys'));
+    }
+
+    /* ================================
+     * ADMIN – TOLAK PENJUALAN
+     * ================================ */
+
+    public function rejectSaleRequest(CarbonCredit $carbonCredit)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($carbonCredit->status !== 'pending_sale') {
+            return redirect()->route('admin.trades.index')
+                ->with('error', 'Kuota karbon ini tidak dalam status menunggu persetujuan penjualan.');
+        }
+
+        $carbonCredit->update([
+            'status'              => 'available',
+            'quantity_to_sell'    => null,
+            'sale_price_per_unit' => null,
+            'sale_requested_at'   => null,
+            'sale_approved_at'    => null,
+        ]);
+
+        return redirect()->route('admin.trades.index')
+            ->with('success', 'Pengajuan penjualan ditolak.');
+    }
+
+    /* ================================
+     * ADMIN – SETUJUI / TOLAK PEMBELIAN
+     * ================================ */
+
+    public function approveBuyRequest(CarbonCredit $carbonCredit)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($carbonCredit->status !== 'pending_buy') {
+            return redirect()
+                ->route('carbon-credits.index')
+                ->with('error', 'Kuota karbon ini tidak dalam status menunggu persetujuan pembelian.');
+        }
+
+        $buyQty        = $carbonCredit->quantity_to_buy ?? 0;
+        $currentAmount = $carbonCredit->amount ?? 0;
+        $newAmount     = $currentAmount + $buyQty;
+
+        $carbonCredit->update([
+            'status'          => 'available',
+            'buy_approved_at' => now(),
+            'amount'          => $newAmount,
+            'quantity_to_buy' => 0,
+        ]);
+
+        Log::info('Permintaan pembelian disetujui oleh admin', [
+            'carbon_credit_id' => $carbonCredit->id,
+            'admin_id'         => Auth::id(),
+            'old_amount'       => $currentAmount,
+            'buy_quantity'     => $buyQty,
+            'new_amount'       => $newAmount,
+        ]);
+
+        return redirect()
+            ->route('carbon-credits.index')
+            ->with('success', 'Permintaan pembelian kuota disetujui dan kuota pemilik telah ditambah.');
+    }
+
+    public function rejectBuyRequest(CarbonCredit $carbonCredit)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($carbonCredit->status !== 'pending_buy') {
+            return redirect()
+                ->route('carbon-credits.index')
+                ->with('error', 'Kuota karbon ini tidak dalam status menunggu persetujuan pembelian.');
+        }
+
+        $carbonCredit->update([
+            'status'           => 'available',
+            'buy_rejected_at'  => now(),
+            'quantity_to_buy'  => null,
+            'buy_requested_at' => null,
+        ]);
+
+        Log::info('Permintaan pembelian ditolak oleh admin', [
+            'carbon_credit_id' => $carbonCredit->id,
+            'admin_id'         => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('carbon-credits.index')
+            ->with('success', 'Permintaan pembelian kuota ditolak.');
+    }
+
+    /* ================================
+     * HAPUS KENDARAAN / KUOTA
+     * ================================ */
+
+    public function destroy(CarbonCredit $carbonCredit)
+    {
+        if (Auth::user()->role !== 'admin' && $carbonCredit->owner_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak menghapus kendaraan ini.');
+        }
+
+        $carbonCredit->delete();
+
+        return redirect()
+            ->route('carbon-credits.vehicles')
+            ->with('success', 'Kendaraan berhasil dihapus.');
+    }
 }

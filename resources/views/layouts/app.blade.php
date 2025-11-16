@@ -4,24 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ config('app.name', 'Carbon Marketplace') }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#10B981',
-                        secondary: '#3B82F6',
-                        dark: '#1F2937',
-                        light: '#F9FAFB',
-                    }
+    <script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class', // ✅ penting untuk dark mode berbasis class
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#10B981',
+                    secondary: '#3B82F6',
+                    dark: '#0F172A',
+                    light: '#F9FAFB',
                 }
             }
         }
-    </script>
+    }
+</script>
+
+<script>
+    // Inisialisasi dark mode dari localStorage
+    (function () {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    })();
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+</script>
+
+
     <style>
-        .chart-container {
+        .dark body,
+    .dark {
+        color: #e2e8f0 !important; /* slate-200 */
+    }
+
+    .dark .text-gray-700,
+    .dark .text-gray-800,
+    .dark .text-gray-900 {
+        color: #e2e8f0 !important;
+    }
+
+    .dark .bg-white,
+    .dark .bg-gray-50,
+    .dark .bg-light {
+        background-color: #1e293b !important; /* slate-800 */
+    }
+
+    .dark .border-gray-200,
+    .dark .border-gray-300 {
+        border-color: #334155 !important; /* slate-600 */
+    }
+
+    .dark input,
+    .dark select,
+    .dark textarea {
+        background-color: #0f172a !important; /* slate-900 */
+        color: #f1f5f9 !important; /* slate-100 */
+        border-color: #334155 !important;
+    }
+
+    .dark .sidebar-item {
+        color: #e2e8f0 !important;
+    }
+        /* .chart-container {
             position: relative;
             height: 300px;
         }
@@ -37,10 +90,15 @@
             .sidebar.active {
                 left: 0;
             }
-        }
+        } */
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body
+    class="antialiased bg-gray-100 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300"
+    x-data
+>
+
+    
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <div class="sidebar bg-white w-64 border-r border-gray-200 flex flex-col">
@@ -49,6 +107,7 @@
                     <i class="fas fa-leaf text-primary text-2xl"></i>
                     <h1 class="text-xl font-bold text-dark">CarbonTrade</h1>
                 </div>
+                
             </div>
 
             <nav class="flex-1 p-4 space-y-2">
@@ -65,7 +124,7 @@
 
         <a href="{{ route('carbon-credits.index') }}" class="flex items-center space-x-3 p-3 rounded-lg {{ (request()->routeIs('carbon-credits.*') && !request()->routeIs('carbon-credits.vehicles')) ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100' }}">
             <i class="fas fa-coins"></i>
-            <span>Kelola Kuota</span>
+            <span>Karbon Saya</span>
         </a>
 
         <a href="{{ route('carbon-credits.vehicles') }}" class="flex items-center space-x-3 p-3 rounded-lg {{ request()->routeIs('carbon-credits.vehicles') ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100' }}">
@@ -78,15 +137,29 @@
             <span>Monitoring Emisi</span>
         </a>
 
-        <a href="{{ route('devices.index') }}" class="flex items-center space-x-3 p-3 rounded-lg {{ request()->routeIs('devices.index') ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100' }}">
-            <i class="fas fa-microchip mr-1"></i>
+        @if(Auth::user()->isAdmin())
+    
+        <a href="{{ route('devices.index') }}"
+           class="flex items-center px-4 py-2 rounded-lg 
+                  {{ request()->routeIs('devices.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+            <i class="fa-solid fa-microchip w-5 mr-3"></i>
             <span>Device Sensor</span>
         </a>
 
-        <a href="{{ route('payouts.index') }}" class="flex items-center space-x-3 p-3 rounded-lg {{ request()->routeIs('payouts.*') ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100' }}">
+        <a href="{{ route('admin.users.index') }}"
+           class="flex items-center px-4 py-2 text-sm
+                  {{ request()->routeIs('admin.users.index') ? 'bg-green-100 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+            <i class="fas fa-users mr-2"></i>
+            <span>Daftar Pengguna</span>
+        </a>
+
+    
+@endif
+
+        <!-- <a href="{{ route('payouts.index') }}" class="flex items-center space-x-3 p-3 rounded-lg {{ request()->routeIs('payouts.*') ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100' }}">
             <i class="fas fa-money-bill-wave"></i>
             <span>Pencairan</span>
-        </a>
+        </a> -->
     @endauth
 </nav>
 
@@ -119,6 +192,7 @@
             <!-- Top Navigation -->
             <header class="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                 <div class="flex items-center space-x-4">
+                    
                     <button id="sidebarToggle" class="md:hidden text-gray-600" aria-label="Toggle sidebar">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
@@ -145,6 +219,23 @@
                         @endif
                     </h2>
                 </div>
+                <div class="flex items-center space-x-3">
+            {{-- Toggle Dark / Light --}}
+            <button
+                type="button"
+                onclick="toggleTheme()"
+                class="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-300/70 dark:border-slate-600
+                       bg-white/90 dark:bg-slate-800 text-xs font-medium text-gray-700 dark:text-slate-100
+                       shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+                <span class="mr-2">
+                    <span class="hidden dark:inline">🌙 Dark</span>
+                    <span class="dark:hidden">☀️ Light</span>
+                </span>
+                <span class="w-7 h-4 flex items-center bg-gray-200 dark:bg-slate-600 rounded-full p-0.5">
+                    <span class="w-3 h-3 bg-white rounded-full transform dark:translate-x-3 transition"></span>
+                </span>
+            </button>
+        </div>
                 <!-- <div class="flex items-center space-x-4">
                     <div class="relative">
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
