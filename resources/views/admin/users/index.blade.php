@@ -32,18 +32,20 @@
                                 {{ ucfirst($user->role ?? 'user') }}
                             </span>
                         </td>
-                        <td class="px-4 py-2 text-center">
-                            {{ $user->carbon_credits_count ?? 0 }}
+                        <td class="px-6 py-3 text-center">
+    {{ $user->vehicles_count }}
+</td>
+<td class="px-6 py-3 text-center">
+    {{ $user->devices_count }}
+</td>
+
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ route('admin.users.devices', $user) }}"
+                            class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                            Lihat Kendaraan & Emisi
+                         </a>
                         </td>
-                        <td class="px-4 py-2 text-center">
-                            {{ $user->devices_count ?? 0 }}
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <a href="{{ route('devices.index', ['owner_id' => $user->id]) }}"
-                               class="inline-flex items-center px-3 py-1.5 text-xs rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
-                                Lihat Kendaraan & Device
-                            </a>
-                        </td>
+
                     </tr>
                 @empty
                     <tr>
@@ -57,7 +59,6 @@
     </div>
 
     <div class="mt-4">
-        {{ $users->links() }}
     </div>
 </div>
 @endsection

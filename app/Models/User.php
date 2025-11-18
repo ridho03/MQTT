@@ -63,7 +63,7 @@ class User extends Authenticatable
     // Semua carbon credit milik user
     public function carbonCredits()
     {
-        return $this->hasMany(CarbonCredit::class, 'owner_id');
+        return $this->hasMany(\App\Models\CarbonCredit::class, 'owner_id');
     }
 
     // Alias kalau mau sebut sebagai "vehicles"

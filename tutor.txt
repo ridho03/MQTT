@@ -1,0 +1,12 @@
+step untuk push ke github
+git init
+git status
+git add .
+git commit -m "update"
+git push
+
+step jalankan ngrok
+ngrok http 8000
+
+step jalankan laravel
+php artisan serve

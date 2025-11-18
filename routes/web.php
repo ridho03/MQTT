@@ -29,7 +29,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/users', [AdminUserController::class, 'index'])
         ->name('admin.users.index')
         ->middleware('admin');
+
+    // ➜ halaman daftar kendaraan + device milik user tertentu
+    Route::get('/admin/users/{user}/devices', [AdminUserController::class, 'devices'])
+        ->name('admin.users.devices');
 });
+
+Route::get('/admin/users/{user}/devices/{carbonCredit}/emissions', 
+    [AdminUserController::class, 'showEmissions']
+)->name('admin.users.emissions')->middleware('admin');
 
 
 /*
