@@ -85,24 +85,14 @@ class DeviceController extends Controller
      */
     public function show(CarbonCredit $carbonCredit)
 {
-    if (Auth::user()->role !== 'admin' && $carbonCredit->owner_id !== Auth::id()) {
-        abort(403, 'Unauthorized action.');
-    }
-
-    if (!$carbonCredit->device_id) {
-        return redirect()->route('devices.index')
-            ->with('error', 'Kendaraan ini belum memiliki device sensor.');
-    }
-
-    $recentSensorData = $carbonCredit->sensorData()->latest('timestamp')->limit(10)->get();
-    $recentCo2eData   = $carbonCredit->co2eData()->latest('timestamp')->limit(10)->get();
-    $recentGpsData    = $carbonCredit->gpsData()->latest('timestamp')->limit(10)->get();
+    $recentSensorData = \App\Models\SensorData::where('device_id', $carbonCredit->device_id)
+        ->orderBy('timestamp', 'desc')
+        ->limit(10)
+        ->get();
 
     return view('devices.show', compact(
         'carbonCredit',
-        'recentSensorData',
-        'recentCo2eData',
-        'recentGpsData'
+        'recentSensorData'
     ));
 }
 

@@ -16,6 +16,11 @@
                 <i class="fas fa-sync-alt"></i>
                 <span>Refresh</span>
             </button>
+            <a href="/report/device/EMISSION_SENSOR_001/csv"
+   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+    <i class="fas fa-download"></i>
+    Download CSV
+</a>
         </div>
     </div>
 
@@ -97,6 +102,7 @@
     </div>
     @endif
     @endif
+
 
     <!-- Vehicle Monitoring -->
     <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
@@ -252,9 +258,15 @@
 
 @endsection
 
+
 @section('scripts')
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    
+
 // Chart initialization
 @if(Auth::user()->role === 'admin' && isset($emissionDashboard['emission_chart_data']))
 const ctx = document.getElementById('emissionChart').getContext('2d');
@@ -428,11 +440,13 @@ function viewDeviceDetails(deviceId) {
                     </div>
                     
                     ${data.location.latitude ? `
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-600 mb-2">📍 Lokasi Terakhir</p>
-                        <p class="font-semibold">${data.location.latitude}, ${data.location.longitude}</p>
-                        <p class="text-sm text-gray-600">Kecepatan: ${data.location.speed_kmph || 0} km/h</p>
-                    </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-2">📍 Lokasi Terakhir</p>
+                            <p class="font-semibold">${data.location.latitude}, ${data.location.longitude}</p>
+                            <p class="text-sm text-gray-600 mb-3">Kecepatan: ${data.location.speed_kmph || 0} km/h</p>
+
+                            <div id="deviceMap" style="height:300px; border-radius:12px;"></div>
+                        </div>
                     ` : ''}
                     
                     <div class="bg-gray-50 p-4 rounded-lg">
@@ -443,6 +457,34 @@ function viewDeviceDetails(deviceId) {
             `;
             document.getElementById('deviceDetails').innerHTML = detailsHtml;
             document.getElementById('deviceModal').classList.remove('hidden');
+
+            // 🔥 INIT MAP
+if (data.location.latitude && data.location.longitude) {
+
+    setTimeout(() => {
+
+        var map = L.map('deviceMap').setView(
+            [data.location.latitude, data.location.longitude], 
+            15
+        );
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var marker = L.marker([
+            data.location.latitude,
+            data.location.longitude
+        ]).addTo(map);
+
+        marker.bindPopup(`
+            <b>${data.nrkb}</b><br>
+            Device: ${data.device_id}<br>
+            Speed: ${data.location.speed_kmph || 0} km/h
+        `).openPopup();
+
+    }, 300); // delay supaya modal sudah render dulu
+}
         })
         .catch(error => {
             console.error('Error loading device details:', error);

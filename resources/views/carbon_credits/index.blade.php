@@ -26,7 +26,7 @@
                         <th class="px-4 py-3 text-left text-sm font-semibold uppercase">NRKB Kendaraan</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Emisi Harian (kg)</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Kuota Karbon (kg CO₂e)</th>
-                        <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Harga/Unit</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Harga/KG</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Status</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold uppercase">Aksi</th>
                     </tr>

@@ -89,9 +89,10 @@ class CarbonCredit extends Model
      * Relasi ke SensorData berdasarkan device_id
      */
     public function sensorData()
-    {
-        return $this->hasMany(SensorData::class, 'device_id', 'device_id');
-    }
+{
+    return $this->hasMany(\App\Models\SensorData::class, 'device_id', 'device_id')
+                ->whereNotNull('device_id');
+}
 
     /**
      * Relasi ke Co2eData berdasarkan device_id

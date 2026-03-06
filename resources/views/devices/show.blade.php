@@ -52,31 +52,64 @@
         @endif
     </div>
 
-    {{-- Grafik Emisi Terakhir (opsional) --}}
-    @if(isset($co2eLabels) && count($co2eLabels))
+    {{-- ================= DATA SENSOR TERBARU ================= --}}
+    @if(isset($recentSensorData) && $recentSensorData->count())
         <div class="mb-6 border rounded-lg p-4 bg-gray-50">
-            <h3 class="font-semibold mb-3 flex items-center space-x-2">
-                <i class="fas fa-chart-line text-primary"></i>
-                <span>Grafik Emisi CO₂e Terakhir</span>
+            <h3 class="font-semibold mb-3">
+                Data Sensor Terbaru
             </h3>
 
-            <canvas id="co2eChart" height="120"></canvas>
+            <table class="w-full text-sm border">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="p-2 border">Waktu</th>
+                        <th class="p-2 border">CO (ppm)</th>
+                        <th class="p-2 border">NH3 (ppm)</th>
+                        <th class="p-2 border">NO2 (ppm)</th>
+                        <th class="p-2 border">Suhu (°C)</th>
+                        <th class="p-2 border">Kelembaban (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($recentSensorData as $data)
+                        <tr class="text-center">
+                            <td class="p-2 border">
+                                {{ $data->timestamp }}
+                            </td>
+                            <td class="p-2 border">
+                                {{ $data->co_ppm }}
+                            </td>
+                            <td class="p-2 border">
+                                {{ $data->nh3_ppm }}
+                            </td>
+                            <td class="p-2 border">
+                                {{ $data->no2_ppm }}
+                            </td>
+                            <td class="p-2 border">
+                                {{ $data->temperature_c }}
+                            </td>
+                            <td class="p-2 border">
+                                {{ $data->humidity }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="mb-6 border rounded-lg p-4 bg-yellow-50">
+            <p class="text-sm text-gray-600">
+                Belum ada data sensor masuk.
+            </p>
         </div>
     @endif
+    {{-- ======================================================== --}}
 
     <div class="flex justify-between mt-4">
         <a href="{{ route('devices.index') }}"
            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 text-sm">
             <i class="fas fa-arrow-left mr-2"></i> Kembali
         </a>
-
-        {{-- Kalau nanti mau aktifkan tombol edit, tinggal buka komentar ini --}}
-        {{-- @if($carbonCredit->device_id)
-            <a href="{{ route('devices.edit', $carbonCredit) }}"
-               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
-                <i class="fas fa-edit mr-2"></i> Edit Device
-            </a>
-        @endif --}}
     </div>
 </div>
 @endsection

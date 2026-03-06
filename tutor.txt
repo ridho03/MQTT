@@ -5,8 +5,36 @@ git add .
 git commit -m "update"
 git push
 
-step jalankan ngrok
-ngrok http 8000
 
+
+jalankan web 
+buka file ke c xampp/htdoc
+buka file cobamqtt
 step jalankan laravel
 php artisan serve
+
+
+step jalankan ngrok
+buka aplikasi ngrok aplication
+ngrok http 8000
+
+
+login user
+user1@gmail.com
+11111111
+
+login admin
+admin1@gmail.com 
+11111111
+
+running broker
+buka cmd
+cd C:\Program Files\Mosquitto
+mosquitto -v
+mosquitto_sub -h localhost -t sipk/device1/data -v (cek bagian subscriber)
+
+ini running php nya agar bisa masuk ke database
+buka file ke mqtt 
+open with terminal
+run : php mqtt_data_sub.php
+

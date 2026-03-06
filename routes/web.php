@@ -9,6 +9,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CarbonCreditController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\ReportController;
+
+Route::get('/report/device/{device}/csv', [ReportController::class, 'exportCSV']);
 
 
 Route::get('/', function () {
@@ -153,6 +156,8 @@ Route::middleware(['auth'])->group(function () {
      * ================================ */
     // List semua device
 Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
+
+
 
 Route::get('/devices/create/{carbonCredit}', [DeviceController::class, 'create'])
     ->name('devices.create');

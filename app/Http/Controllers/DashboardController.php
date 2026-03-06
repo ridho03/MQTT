@@ -49,7 +49,8 @@ class DashboardController extends Controller
                         'effective_quota' => 0,
                     ];
                 }
-                $dailyEmissions = $credit->daily_emissions_kg ?? 0;
+                $dailyAccumulation = Co2eData::getDailyAccumulation($credit->device_id);
+                $dailyEmissions = $dailyAccumulation['total_emissions_kg'] ?? 0;
                 $effectiveVehicleQuotas[$credit->nrkb]['total_amount'] += $credit->amount ?? 0;
                 $effectiveVehicleQuotas[$credit->nrkb]['effective_quota'] += max(0, ($credit->amount ?? 0) - $dailyEmissions);
             }
@@ -261,11 +262,16 @@ class DashboardController extends Controller
             if (!$carbonCredit) {
                 return response()->json(['error' => 'Device not found'], 404);
             }
-
-            // 🔥 GUNAKAN METHOD HELPER UNTUK AKUMULASI REAL-TIME
+        
             $dailyAccumulation = Co2eData::getDailyAccumulation($deviceId);
+
+            $totalEmissionToday = $dailyAccumulation['total_emissions_kg'] ?? 0;
+
+            // 🔥 Hitung sisa carbon credit secara realtime
+            $effectiveQuota = max(0, ($carbonCredit->amount ?? 0) - $totalEmissionToday);
+
             $monthlyAccumulation = Co2eData::getMonthlyAccumulation($deviceId);
-            $totalAccumulation = Co2eData::getTotalAccumulation($deviceId);
+            $totalAccumulation   = Co2eData::getTotalAccumulation($deviceId);
 
             $data = [
                 'device_id' => $deviceId,
@@ -275,6 +281,12 @@ class DashboardController extends Controller
                 'sensor_status' => $carbonCredit->sensor_status ?? 'inactive',
                 'last_update' => $carbonCredit->last_sensor_update,
                 
+
+                'carbon_credit' => [
+    'total_amount' => $carbonCredit->amount ?? 0,
+    'remaining_quota' => $effectiveQuota,
+],
+
                 // 🔥 DATA AKUMULASI HARIAN
                 'daily' => [
                     'total_co2e_mg_m3' => $dailyAccumulation['total_co2e_mg_m3'],
