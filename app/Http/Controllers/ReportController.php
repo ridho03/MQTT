@@ -32,7 +32,7 @@ public function exportCSV($device)
         'sensor_data.pm_density',
         'co2e_data.co_contribution',
         'co2e_data.co_mg_m3',
-        'co2e_data.co2e_mg_m3'
+        'co2e_data.co2e_g_km'
     )
     ->get();
 
@@ -81,7 +81,7 @@ public function exportCSV($device)
             $row->pm_density,
             $row->co_contribution,
             $row->co_mg_m3,
-            $row->co2e_mg_m3
+            $row->co2e_g_km
         ]);
 
     }

@@ -9,6 +9,7 @@ use App\Models\CarbonCredit;
 use App\Models\Co2eData;
 use App\Models\SensorData;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 
 class UserController extends Controller
@@ -49,14 +50,16 @@ class UserController extends Controller
     $deviceId = $carbonCredit->device_id;
 
     // Ambil data mentah
-    $rawData = SensorData::where('device_id', $deviceId)
-        ->orderBy('timestamp', 'asc')
-        ->get(['timestamp', 'co_ppm', 'nh3_ppm', 'no2_ppm']);
+
+$rawData = SensorData::where('device_id', $deviceId)
+    ->where('timestamp', '>=', Carbon::now()->subDay())
+    ->orderBy('timestamp', 'asc')
+    ->get(['timestamp', 'co_ppm', 'nh3_ppm', 'no2_ppm']);
 
     // Ambil data CO₂e
     $co2eData = Co2eData::where('device_id', $deviceId)
         ->orderBy('timestamp', 'asc')
-        ->get(['timestamp', 'co2e_mg_m3']);
+        ->get(['timestamp', 'co2e_g_km']);
 
     return view('admin.users.emissions', compact(
         'user', 'carbonCredit', 'rawData', 'co2eData'

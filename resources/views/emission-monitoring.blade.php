@@ -16,7 +16,7 @@
                 <i class="fas fa-sync-alt"></i>
                 <span>Refresh</span>
             </button>
-            <a href="/report/device/EMISSION_SENSOR_001/csv"
+            <a href="/report/device/001/csv"
    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
     <i class="fas fa-download"></i>
     Download CSV
@@ -135,7 +135,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device ID</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2e mg/m³ (Total Hari Ini)</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Hari Ini</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emisi Harian</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Update Terakhir</th>
@@ -180,16 +180,16 @@
                                 $dailyAccumulation = \App\Models\Co2eData::getDailyAccumulation($credit->device_id);
                             @endphp
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold {{ ($dailyAccumulation['total_co2e_mg_m3'] ?? 0) > 100 ? 'text-red-600' : (($dailyAccumulation['total_co2e_mg_m3'] ?? 0) > 50 ? 'text-orange-600' : 'text-blue-600') }}">
-                                    {{ number_format($dailyAccumulation['total_co2e_mg_m3'] ?? 0, 1) }} mg/m³
+                                <span class="text-sm font-bold {{ ($dailyAccumulation['total_co2e_g_km'] ?? 0) > 100 ? 'text-red-600' : (($dailyAccumulation['total_co2e_g_km'] ?? 0) > 50 ? 'text-orange-600' : 'text-blue-600') }}">
+                                    {{ number_format($dailyAccumulation['total_co2e_g_km'] ?? 0, 1) }} g/km
                                 </span>
                                 <div class="text-xs text-gray-500">
                                     ({{ $dailyAccumulation['record_count'] }} records)
                                 </div>
                                 @if($dailyAccumulation['record_count'] > 0)
                                 <div class="text-xs text-gray-400">
-                                    Avg: {{ number_format($dailyAccumulation['avg_co2e_mg_m3'] ?? 0, 1) }} | 
-                                    Max: {{ number_format($dailyAccumulation['max_co2e_mg_m3'] ?? 0, 1) }}
+                                    Avg: {{ number_format($dailyAccumulation['avg_co2e_g_km'] ?? 0, 1) }} | 
+                                    Max: {{ number_format($dailyAccumulation['max_co2e_g_km'] ?? 0, 1) }}
                                 </div>
                                 @endif
                             </div>
@@ -354,16 +354,16 @@ function viewDeviceDetails(deviceId) {
                         <h4 class="font-semibold text-blue-800 mb-3">📊 Akumulasi Harian (${data.daily.date})</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm text-blue-600">Total CO2e (mg/m³)</p>
-                                <p class="font-bold text-blue-800">${data.daily.total_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-blue-600">Total CO2e (g/km)</p>
+                                <p class="font-bold text-blue-800">${data.daily.total_co2e_g_km || 0}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-blue-600">Rata-rata (mg/m³)</p>
-                                <p class="font-bold text-blue-800">${data.daily.avg_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-blue-600">Rata-rata (g/km)</p>
+                                <p class="font-bold text-blue-800">${data.daily.avg_co2e_g_km || 0}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-blue-600">Maksimum (mg/m³)</p>
-                                <p class="font-bold text-blue-800">${data.daily.max_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-blue-600">Maksimum (g/km)</p>
+                                <p class="font-bold text-blue-800">${data.daily.max_co2e_g_km || 0}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-blue-600">Jumlah Record</p>
@@ -381,12 +381,12 @@ function viewDeviceDetails(deviceId) {
                         <h4 class="font-semibold text-green-800 mb-3">📊 Akumulasi Bulanan (${data.monthly.month}/${data.monthly.year})</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm text-green-600">Total CO2e (mg/m³)</p>
-                                <p class="font-bold text-green-800">${data.monthly.total_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-green-600">Total CO2e (g/km)</p>
+                                <p class="font-bold text-green-800">${data.monthly.total_co2e_g_km || 0}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-green-600">Rata-rata (mg/m³)</p>
-                                <p class="font-bold text-green-800">${data.monthly.avg_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-green-600">Rata-rata (g/km)</p>
+                                <p class="font-bold text-green-800">${data.monthly.avg_co2e_g_km || 0}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-green-600">Jumlah Record</p>
@@ -404,12 +404,12 @@ function viewDeviceDetails(deviceId) {
                         <h4 class="font-semibold text-purple-800 mb-3">📊 Akumulasi Total (Keseluruhan)</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm text-purple-600">Total CO2e (mg/m³)</p>
-                                <p class="font-bold text-purple-800">${data.total.total_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-purple-600">Total CO2e (g/km)</p>
+                                <p class="font-bold text-purple-800">${data.total.total_co2e_g_km || 0}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-purple-600">Rata-rata (mg/m³)</p>
-                                <p class="font-bold text-purple-800">${data.total.avg_co2e_mg_m3 || 0}</p>
+                                <p class="text-sm text-purple-600">Rata-rata (g/km)</p>
+                                <p class="font-bold text-purple-800">${data.total.avg_co2e_g_km || 0}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-purple-600">Total Record</p>

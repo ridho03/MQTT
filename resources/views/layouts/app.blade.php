@@ -74,7 +74,7 @@
     .dark .sidebar-item {
         color: #e2e8f0 !important;
     }
-        /* .chart-container {
+         .chart-container {
             position: relative;
             height: 300px;
         }
@@ -82,15 +82,18 @@
             transition: all 0.3s ease;
         }
         @media (max-width: 768px) {
-            .sidebar {
-                position: absolute;
-                left: -100%;
-                z-index: 50;
-            }
-            .sidebar.active {
-                left: 0;
-            }
-        } */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100%;
+        z-index: 50;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+}
     </style>
 </head>
 <body
@@ -100,8 +103,9 @@
 
     
     <div class="flex h-screen overflow-hidden">
+        <div id="overlay" class="fixed inset-0 bg-black/40 hidden md:hidden"></div>
         <!-- Sidebar -->
-        <div class="sidebar bg-white w-64 border-r border-gray-200 flex flex-col">
+        <div class="sidebar bg-white w-64 border-r border-gray-200 flex flex-col fixed md:relative h-full shadow-lg md:shadow-none">
             <div class="p-4 border-b border-gray-200">
                 <div class="flex items-center space-x-2">
                     <i class="fas fa-leaf text-primary text-2xl"></i>
@@ -190,7 +194,7 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Navigation -->
-            <header class="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     
                     <button id="sidebarToggle" class="md:hidden text-gray-600" aria-label="Toggle sidebar">
@@ -248,7 +252,7 @@
             </header>
 
             <!-- Content -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
                 @if(session('success'))
                     <div class="mb-4 p-4 bg-green-100 border border-green-200 rounded text-green-700 flex items-center space-x-2" role="alert">
                         <i class="fas fa-check-circle" aria-hidden="true"></i>
@@ -280,11 +284,20 @@
     </div>
 
     <script>
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    </script>
+const toggleBtn = document.getElementById('sidebarToggle');
+const sidebar = document.querySelector('.sidebar');
+const overlay = document.getElementById('overlay');
+
+toggleBtn.addEventListener('click', function () {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('hidden');
+});
+
+overlay.addEventListener('click', function(){
+    sidebar.classList.remove('active');
+    overlay.classList.add('hidden');
+});
+</script>
 
     @yield('scripts')
 </body>

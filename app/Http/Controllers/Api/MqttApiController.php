@@ -77,7 +77,7 @@ class MqttApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'device_id' => 'required|string',
                 'timestamp' => 'required|numeric',
-                'co2e_mg_m3' => 'required|numeric|min:0',
+                'co2e_g_km' => 'required|numeric|min:0',
                 'contributors' => 'sometimes|array',
                 'gwp_values' => 'sometimes|array',
             ]);
@@ -98,7 +98,7 @@ class MqttApiController extends Controller
                 'data' => [
                     'id' => $co2eData->id,
                     'device_id' => $co2eData->device_id,
-                    'co2e_mg_m3' => $co2eData->co2e_mg_m3,
+                    'co2e_g_km' => $co2eData->co2e_g_km,
                     'timestamp' => $co2eData->timestamp->toISOString(),
                 ]
             ], 201);

@@ -1,15 +1,15 @@
-# TODO: Cleanup PPM-based Code to mg/m³-based
+# TODO: Cleanup PPM-based Code to g/km-based
 
 ## Progress Tracking
 
 ### 1. Models
 - [ ] app/Models/Co2eData.php - Remove convertPpmToKg and convertPpmToMgPerM3 methods
-- [ ] app/Models/CarbonCredit.php - Replace co2e_ppm references with co2e_mg_m3
+- [ ] app/Models/CarbonCredit.php - Replace co2e_ppm references with co2e_g_km
 
 ### 2. Services  
 - [ ] app/Services/CarbonCalculationService.php - Replace convertPpmToKg with convertMgM3ToKg
-- [ ] app/Services/EmissionTrackingService.php - Update PPM references to mg/m³
-- [ ] app/Services/MqttDataService.php - Update PPM references to mg/m³
+- [ ] app/Services/EmissionTrackingService.php - Update PPM references to g/km
+- [ ] app/Services/MqttDataService.php - Update PPM references to g/km
 
 ### 3. Controllers
 - [ ] app/Http/Controllers/DashboardController.php - Update PPM references

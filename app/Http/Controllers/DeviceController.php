@@ -158,7 +158,7 @@ class DeviceController extends Controller
         'auto_adjustment_enabled' => false,
 
         // kolom numeric yang NOT NULL, isi 0
-        'current_co2e_mg_m3'      => 0,
+        'current_co2e_g_km'      => 0,
         'daily_emissions_kg'      => 0,
         'emission_threshold_kg'   => 0,
 

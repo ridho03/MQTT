@@ -130,9 +130,9 @@ class DashboardController extends Controller
                 'device_id' => $credit->device_id,
                 'sensor_status' => $credit->sensor_status ?? 'inactive',
                 // 'current_co2e_ppm' => $credit->current_co2e_ppm ?? 0, // Tidak diperlukan lagi
-                'daily_co2e_sum' => $dailyAccumulation['total_co2e_mg_m3'], // Total CO2e mg/m³ hari ini (AKUMULASI)
-                'daily_co2e_avg' => $dailyAccumulation['avg_co2e_mg_m3'], // Rata-rata CO2e mg/m³ hari ini
-                'daily_co2e_max' => $dailyAccumulation['max_co2e_mg_m3'], // Maksimum CO2e mg/m³ hari ini
+                'daily_co2e_sum' => $dailyAccumulation['total_co2e_g_km'], // Total CO2e g/km hari ini (AKUMULASI)
+                'daily_co2e_avg' => $dailyAccumulation['avg_co2e_g_km'], // Rata-rata CO2e g/km hari ini
+                'daily_co2e_max' => $dailyAccumulation['max_co2e_g_km'], // Maksimum CO2e g/km hari ini
                 'daily_record_count' => $dailyAccumulation['record_count'], // Jumlah record hari ini
                 'daily_emissions_kg' => $dailyAccumulation['total_emissions_kg'], // Total emisi dalam kg
                 'last_location' => null,
@@ -163,7 +163,7 @@ class DashboardController extends Controller
 
                 // Check for alerts (gunakan data akumulasi untuk threshold)
             if ($vehicleStats['daily_emissions_kg'] > ($credit->emission_threshold_kg ?? 25) || 
-                $vehicleStats['daily_co2e_sum'] > 100 || // Gunakan mg/m³ threshold
+                $vehicleStats['daily_co2e_sum'] > 100 || // Gunakan g/km threshold
                 $credit->sensor_status === 'error') {
                 $vehicleStats['has_alert'] = true;
                 $stats['alerts_count']++;
@@ -238,7 +238,7 @@ class DashboardController extends Controller
             $dayEmissions = Co2eData::whereDate('timestamp', $date)
                        ->get()
                        ->sum(function ($data) {
-                           return Co2eData::convertMgM3ToKg($data->co2e_mg_m3);
+                           return Co2eData::convertMgM3ToKg($data->co2e_g_km);
                        });
             $chartData[] = [
                 'date' => $date->format('M d'),
@@ -289,10 +289,10 @@ class DashboardController extends Controller
 
                 // 🔥 DATA AKUMULASI HARIAN
                 'daily' => [
-                    'total_co2e_mg_m3' => $dailyAccumulation['total_co2e_mg_m3'],
-                    'avg_co2e_mg_m3' => $dailyAccumulation['avg_co2e_mg_m3'],
-                    'max_co2e_mg_m3' => $dailyAccumulation['max_co2e_mg_m3'],
-                    'min_co2e_mg_m3' => $dailyAccumulation['min_co2e_mg_m3'],
+                    'total_co2e_g_km' => $dailyAccumulation['total_co2e_g_km'],
+                    'avg_co2e_g_km' => $dailyAccumulation['avg_co2e_g_km'],
+                    'max_co2e_g_km' => $dailyAccumulation['max_co2e_g_km'],
+                    'min_co2e_g_km' => $dailyAccumulation['min_co2e_g_km'],
                     'record_count' => $dailyAccumulation['record_count'],
                     'emissions_kg' => $dailyAccumulation['total_emissions_kg'],
                     'date' => $dailyAccumulation['date']
@@ -300,8 +300,8 @@ class DashboardController extends Controller
                 
                 // 🔥 DATA AKUMULASI BULANAN
                 'monthly' => [
-                    'total_co2e_mg_m3' => $monthlyAccumulation['total_co2e_mg_m3'],
-                    'avg_co2e_mg_m3' => $monthlyAccumulation['avg_co2e_mg_m3'],
+                    'total_co2e_g_km' => $monthlyAccumulation['total_co2e_g_km'],
+                    'avg_co2e_g_km' => $monthlyAccumulation['avg_co2e_g_km'],
                     'record_count' => $monthlyAccumulation['record_count'],
                     'emissions_kg' => $monthlyAccumulation['total_emissions_kg'],
                     'month' => $monthlyAccumulation['month'],
@@ -310,8 +310,8 @@ class DashboardController extends Controller
                 
                 // 🔥 DATA AKUMULASI TOTAL
                 'total' => [
-                    'total_co2e_mg_m3' => $totalAccumulation['total_co2e_mg_m3'],
-                    'avg_co2e_mg_m3' => $totalAccumulation['avg_co2e_mg_m3'],
+                    'total_co2e_g_km' => $totalAccumulation['total_co2e_g_km'],
+                    'avg_co2e_g_km' => $totalAccumulation['avg_co2e_g_km'],
                     'record_count' => $totalAccumulation['record_count'],
                     'emissions_kg' => $totalAccumulation['total_emissions_kg']
                 ],
@@ -327,7 +327,7 @@ class DashboardController extends Controller
                 'threshold' => [
                     'emission_threshold_kg' => $carbonCredit->emission_threshold_kg ?? 25,
                     'is_threshold_exceeded' => $dailyAccumulation['total_emissions_kg'] > ($carbonCredit->emission_threshold_kg ?? 25),
-                    'is_high_co2e' => $dailyAccumulation['total_co2e_mg_m3'] > 100 // Gunakan mg/m³ threshold
+                    'is_high_co2e' => $dailyAccumulation['total_co2e_g_km'] > 100 // Gunakan g/km threshold
                 ]
             ];
         } else {

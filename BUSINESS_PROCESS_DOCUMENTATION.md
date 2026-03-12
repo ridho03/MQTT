@@ -58,7 +58,7 @@ Sistem ini adalah marketplace untuk jual-beli kredit karbon (carbon credits) yan
 **Alur Proses**:
 1. Sensor IoT pada kendaraan mengirim data emisi via MQTT
 2. Sistem mencatat:
-   - `current_co2e_mg_m3`: Emisi saat ini
+   - `current_co2e_g_km`: Emisi saat ini
    - `daily_emissions_kg`: Total emisi hari ini
    - `monthly_emissions_kg`: Total emisi bulan ini
    - `total_emissions_kg`: Total emisi keseluruhan
@@ -1170,7 +1170,7 @@ Config::$is3ds = true
 ```
 
 **Data Captured**:
-- CO2e concentration (mg/m³)
+- CO2e concentration (g/km)
 - GPS location (latitude, longitude)
 - Speed (km/h)
 - Timestamp

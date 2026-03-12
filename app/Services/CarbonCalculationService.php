@@ -45,20 +45,20 @@ class CarbonCalculationService
                 'gwp_values' => self::GWP_VALUES
             ]);
 
-            // Hitung mass concentration (mg/m³) untuk setiap gas (sesuai formula Arduino)
+            // Hitung mass concentration (g/km) untuk setiap gas (sesuai formula Arduino)
             $coMassConcentration = $coPpm * (self::MOLECULAR_WEIGHTS['co'] / self::MOLAR_VOLUME);
             $nh3MassConcentration = $nh3Ppm * (self::MOLECULAR_WEIGHTS['nh3'] / self::MOLAR_VOLUME);
             $no2MassConcentration = $no2Ppm * (self::MOLECULAR_WEIGHTS['no2'] / self::MOLAR_VOLUME);
 
-            // Hitung kontribusi CO2e untuk setiap gas (mg/m³)
+            // Hitung kontribusi CO2e untuk setiap gas (g/km)
             $coContribution = $coMassConcentration * self::GWP_VALUES['co'];
             $nh3Contribution = $nh3MassConcentration * self::GWP_VALUES['nh3'];
             $no2Contribution = $no2MassConcentration * self::GWP_VALUES['no2'];
 
-            // Total CO2e dalam mg/m³ (sesuai formula Arduino)
+            // Total CO2e dalam g/km (sesuai formula Arduino)
             $totalCo2eMgPerM3 = $coContribution + $nh3Contribution + $no2Contribution;
 
-            // Konversi mg/m³ ke PPM untuk kompatibilitas dengan sistem yang ada
+            // Konversi g/km ke PPM untuk kompatibilitas dengan sistem yang ada
             // Menggunakan massa molar CO2 (44.01 g/mol) sebagai referensi
             $co2ePpm = $totalCo2eMgPerM3 / (44.01 / self::MOLAR_VOLUME);
 
@@ -69,11 +69,11 @@ class CarbonCalculationService
                 'co_contribution_mg_m3' => $coContribution,
                 'nh3_contribution_mg_m3' => $nh3Contribution,
                 'no2_contribution_mg_m3' => $no2Contribution,
-                'total_co2e_mg_m3' => $totalCo2eMgPerM3,
+                'total_co2e_g_km' => $totalCo2eMgPerM3,
             ]);
 
             return [
-                'co2e_mg_m3' => $totalCo2eMgPerM3,
+                'co2e_g_km' => $totalCo2eMgPerM3,
                 'contributors' => [
                     'co_contribution' => $coContribution,
                     'nh3_contribution' => $nh3Contribution,
@@ -99,7 +99,7 @@ class CarbonCalculationService
     }
 
     /**
-     * Konversi mg/m³ ke kilogram menggunakan rumus yang sama dengan Co2eData
+     * Konversi g/km ke kilogram menggunakan rumus yang sama dengan Co2eData
      */
     public function convertMgM3ToKg($mgM3, $volumeM3 = 1)
     {
@@ -148,15 +148,15 @@ class CarbonCalculationService
         $recordCount = $co2eData->count();
 
         foreach ($co2eData as $data) {
-            $totalEmissionsKg += $this->convertMgM3ToKg($data->co2e_mg_m3);
+            $totalEmissionsKg += $this->convertMgM3ToKg($data->co2e_g_km);
         }
 
         return [
             'device_id' => $deviceId,
             'date' => $date->format('Y-m-d'),
             'total_emissions_kg' => $totalEmissionsKg,
-            'average_co2e_mg_m3' => $recordCount > 0 ? $co2eData->avg('co2e_mg_m3') : 0,
-            'max_co2e_mg_m3' => $recordCount > 0 ? $co2eData->max('co2e_mg_m3') : 0,
+            'average_co2e_g_km' => $recordCount > 0 ? $co2eData->avg('co2e_g_km') : 0,
+            'max_co2e_g_km' => $recordCount > 0 ? $co2eData->max('co2e_g_km') : 0,
             'record_count' => $recordCount,
         ];
     }
@@ -178,7 +178,7 @@ class CarbonCalculationService
         $recordCount = $co2eData->count();
 
         foreach ($co2eData as $data) {
-            $totalEmissionsKg += $this->convertMgM3ToKg($data->co2e_mg_m3);
+            $totalEmissionsKg += $this->convertMgM3ToKg($data->co2e_g_km);
         }
 
         // Hitung emisi harian rata-rata
@@ -191,8 +191,8 @@ class CarbonCalculationService
             'year' => $year,
             'total_emissions_kg' => $totalEmissionsKg,
             'average_daily_emissions_kg' => $avgDailyEmissions,
-            'average_co2e_mg_m3' => $recordCount > 0 ? $co2eData->avg('co2e_mg_m3') : 0,
-            'max_co2e_mg_m3' => $recordCount > 0 ? $co2eData->max('co2e_mg_m3') : 0,
+            'average_co2e_g_km' => $recordCount > 0 ? $co2eData->avg('co2e_g_km') : 0,
+            'max_co2e_g_km' => $recordCount > 0 ? $co2eData->max('co2e_g_km') : 0,
             'record_count' => $recordCount,
         ];
     }
@@ -258,9 +258,9 @@ public function generateEmissionReport($deviceId, $startDate, $endDate)
             ],
             'summary' => [
                 'total_emissions_kg' => 0,
-                'average_co2e_mg_m3' => 0,
-                'max_co2e_mg_m3' => 0,
-                'min_co2e_mg_m3' => 0,
+                'average_co2e_g_km' => 0,
+                'max_co2e_g_km' => 0,
+                'min_co2e_g_km' => 0,
                 'record_count' => 0
             ],
             'daily_breakdown' => [],
@@ -273,7 +273,7 @@ public function generateEmissionReport($deviceId, $startDate, $endDate)
     $dailyBreakdown = [];
 
     foreach ($co2eData as $data) {
-        $emissionKg = $this->convertMgM3ToKg($data->co2e_mg_m3);
+        $emissionKg = $this->convertMgM3ToKg($data->co2e_g_km);
         $totalEmissionsKg += $emissionKg;
 
         $date = $data->timestamp->format('Y-m-d');
@@ -281,22 +281,22 @@ public function generateEmissionReport($deviceId, $startDate, $endDate)
             $dailyBreakdown[$date] = [
                 'date' => $date,
                 'total_emissions_kg' => 0,
-                'average_co2e_mg_m3' => 0,
-                'max_co2e_mg_m3' => 0,
+                'average_co2e_g_km' => 0,
+                'max_co2e_g_km' => 0,
                 'record_count' => 0,
                 'records' => []
             ];
         }
 
         $dailyBreakdown[$date]['total_emissions_kg'] += $emissionKg;
-        $dailyBreakdown[$date]['max_co2e_mg_m3'] = max($dailyBreakdown[$date]['max_co2e_mg_m3'], $data->co2e_mg_m3);
+        $dailyBreakdown[$date]['max_co2e_g_km'] = max($dailyBreakdown[$date]['max_co2e_g_km'], $data->co2e_g_km);
         $dailyBreakdown[$date]['record_count']++;
-        $dailyBreakdown[$date]['records'][] = $data->co2e_mg_m3;
+        $dailyBreakdown[$date]['records'][] = $data->co2e_g_km;
     }
 
     // Hitung rata-rata untuk setiap hari
     foreach ($dailyBreakdown as &$day) {
-        $day['average_co2e_mg_m3'] = array_sum($day['records']) / count($day['records']);
+        $day['average_co2e_g_km'] = array_sum($day['records']) / count($day['records']);
         unset($day['records']); // Hapus detail records untuk menghemat memory
     }
 
@@ -308,9 +308,9 @@ public function generateEmissionReport($deviceId, $startDate, $endDate)
         ],
         'summary' => [
             'total_emissions_kg' => $totalEmissionsKg,
-            'average_co2e_mg_m3' => $co2eData->avg('co2e_mg_m3'),
-            'max_co2e_mg_m3' => $co2eData->max('co2e_mg_m3'),
-            'min_co2e_mg_m3' => $co2eData->min('co2e_mg_m3'),
+            'average_co2e_g_km' => $co2eData->avg('co2e_g_km'),
+            'max_co2e_g_km' => $co2eData->max('co2e_g_km'),
+            'min_co2e_g_km' => $co2eData->min('co2e_g_km'),
             'record_count' => $co2eData->count()
         ],
         'daily_breakdown' => array_values($dailyBreakdown)
@@ -326,7 +326,7 @@ public function predictEmissions($deviceId, $days = 7)
     // Ambil data 30 hari terakhir untuk analisis trend
     $historicalData = Co2eData::where('device_id', $deviceId)
                              ->where('timestamp', '>=', now()->subDays(30))
-                             ->selectRaw('DATE(timestamp) as date, AVG(co2e_mg_m3) as avg_co2e')
+                             ->selectRaw('DATE(timestamp) as date, AVG(co2e_g_km) as avg_co2e')
                              ->groupBy('date')
                              ->orderBy('date')
                              ->get();
@@ -370,7 +370,7 @@ public function predictEmissions($deviceId, $days = 7)
         
         $predictions[] = [
             'date' => now()->addDays($i)->format('Y-m-d'),
-            'predicted_co2e_mg_m3' => max(0, $predictedValue), // Tidak boleh negatif
+            'predicted_co2e_g_km' => max(0, $predictedValue), // Tidak boleh negatif
             'predicted_emissions_kg' => max(0, $predictedEmissionKg),
             'confidence' => $this->calculatePredictionConfidence($historicalData, $i)
         ];

@@ -34,7 +34,7 @@ mosquitto -v
 mosquitto_sub -h localhost -t sipk/device1/data -v (cek bagian subscriber)
 
 ini running php nya agar bisa masuk ke database
-buka file ke mqtt 
+buka file C:\xampp\htdocs\mqtt
 open with terminal
 run : php mqtt_data_sub.php
 

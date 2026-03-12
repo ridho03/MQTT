@@ -32,7 +32,7 @@ class CarbonCredit extends Model
         'sale_approved_at',
         // Kolom baru untuk MQTT integration
         'device_id',
-        'current_co2e_mg_m3',
+        'current_co2e_g_km',
         'total_emissions_kg',
         'daily_emissions_kg',
         'monthly_emissions_kg',
@@ -164,7 +164,7 @@ class CarbonCredit extends Model
     public function getAverageDailyEmissionsAttribute()
     {
         return $this->co2eData()
-                    ->selectRaw('DATE(timestamp) as date, AVG(co2e_mg_m3) as avg_co2e')
+                    ->selectRaw('DATE(timestamp) as date, AVG(co2e_g_km) as avg_co2e')
                     ->groupBy('date')
                     ->orderBy('date', 'desc')
                     ->limit(30)
@@ -201,13 +201,13 @@ class CarbonCredit extends Model
         $latestGps = $this->gpsData()->latest('timestamp')->first();
 
         if ($latestCo2e) {
-            $this->current_co2e_mg_m3 = $latestCo2e->co2e_mg_m3;
+            $this->current_co2e_g_km = $latestCo2e->co2e_g_km;
             $this->last_sensor_update = $latestCo2e->timestamp;
 
             // Hitung emisi harian menggunakan convertMgM3ToKg
             $dailyEmissions = $this->co2eData()
                                    ->whereDate('timestamp', today())
-                                   ->sum('co2e_mg_m3');
+                                   ->sum('co2e_g_km');
             $this->daily_emissions_kg = \App\Models\Co2eData::convertMgM3ToKg($dailyEmissions);
 
             // Auto-adjust quantity_to_sell if enabled
@@ -219,7 +219,7 @@ class CarbonCredit extends Model
             $monthlyEmissions = $this->co2eData()
                                      ->whereMonth('timestamp', now()->month)
                                      ->whereYear('timestamp', now()->year)
-                                     ->sum('co2e_mg_m3');
+                                     ->sum('co2e_g_km');
             $this->monthly_emissions_kg = \App\Models\Co2eData::convertMgM3ToKg($monthlyEmissions);
 
             $this->total_emissions_kg += $latestCo2e->emission_in_kg;

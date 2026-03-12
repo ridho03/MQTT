@@ -84,7 +84,7 @@ class EmissionTrackingService
                              ->first();
 
         if ($latestCo2e) {
-            $carbonCredit->current_co2e_mg_m3 = $latestCo2e->co2e_mg_m3;
+            $carbonCredit->current_co2e_g_km = $latestCo2e->co2e_g_km;
             $carbonCredit->last_sensor_update = $latestCo2e->timestamp;
             
             // Update status sensor berdasarkan waktu update terakhir
@@ -132,7 +132,7 @@ class EmissionTrackingService
         $totalEmissions = Co2eData::where('device_id', $carbonCredit->device_id)
                                  ->get()
                                  ->sum(function ($data) {
-                                     $this->carbonCalculationService->convertMgM3ToKg($data->co2e_mg_m3);
+                                     $this->carbonCalculationService->convertMgM3ToKg($data->co2e_g_km);
                                  });
         
         $carbonCredit->total_emissions_kg = $totalEmissions;
@@ -205,15 +205,15 @@ class EmissionTrackingService
             ];
         }
 
-        // Alert 2: CO2e mg/m³ sangat tinggi
-        if ($carbonCredit->current_co2e_mg_m3 > 100) { // Threshold 100 mg/m³
+        // Alert 2: CO2e g/km sangat tinggi
+        if ($carbonCredit->current_co2e_g_km > 100) { // Threshold 100 g/km
             $alerts[] = [
-                'type' => 'high_co2e_mg_m3',
+                'type' => 'high_co2e_g_km',
                 'carbon_credit_id' => $carbonCredit->id,
                 'device_id' => $carbonCredit->device_id,
-                'message' => "Tingkat CO2e sangat tinggi: {$carbonCredit->current_co2e_mg_m3} mg/m³",
+                'message' => "Tingkat CO2e sangat tinggi: {$carbonCredit->current_co2e_g_km} g/km",
                 'severity' => 'critical',
-                'current_value' => $carbonCredit->current_co2e_mg_m3,
+                'current_value' => $carbonCredit->current_co2e_g_km,
                 'threshold' => 100
             ];
         }
@@ -307,8 +307,8 @@ class EmissionTrackingService
                     'vehicle_type' => $carbonCredit->vehicle_type,
                     'owner_name' => $carbonCredit->owner->name ?? 'Unknown',
                     'emissions_kg' => $dailyStats['total_emissions_kg'],
-                    'average_co2e_mg_m3' => $dailyStats['average_co2e_mg_m3'],
-                    'max_co2e_mg_m3' => $dailyStats['max_co2e_mg_m3'],
+                    'average_co2e_g_km' => $dailyStats['average_co2e_g_km'],
+                    'max_co2e_g_km' => $dailyStats['max_co2e_g_km'],
                     'record_count' => $dailyStats['record_count'],
                     'threshold_exceeded' => $dailyStats['total_emissions_kg'] > $carbonCredit->emission_threshold_kg
                 ];
@@ -369,7 +369,7 @@ class EmissionTrackingService
         $todayTotalEmissions = Co2eData::whereDate('timestamp', today())
                                      ->get()
                                      ->sum(function ($data) {
-                                         $this->carbonCalculationService->convertMgM3ToKg($data->co2e_mg_m3);
+                                         $this->carbonCalculationService->convertMgM3ToKg($data->co2e_g_km);
                                      });
 
         // Device dengan emisi tertinggi hari ini

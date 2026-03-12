@@ -46,8 +46,8 @@ return new class extends Migration
             $table->string('device_id')->nullable()->index()->after('nomor_rangka_5digit');
             
             // Kolom untuk tracking emisi real-time
-            $table->float('current_co2e_mg_m3')->nullable()->after('device_id');
-            $table->float('total_emissions_kg')->default(0)->after('current_co2e_mg_m3');
+            $table->float('current_co2e_g_km')->nullable()->after('device_id');
+            $table->float('total_emissions_kg')->default(0)->after('current_co2e_g_km');
             $table->float('daily_emissions_kg')->default(0)->after('total_emissions_kg');
             $table->float('monthly_emissions_kg')->default(0)->after('daily_emissions_kg');
             

@@ -14,7 +14,7 @@ class Co2eData extends Model
     protected $fillable = [
         'device_id',
         'timestamp',
-        // 'co2e_ppm', // Tidak diperlukan lagi, menggunakan co2e_mg_m3
+        // 'co2e_ppm', // Tidak diperlukan lagi, menggunakan co2e_g_km
         // Arduino menggunakan CO, NH3, NO2 - tidak ada CO2, CH4, N2O langsung
         'co_contribution',
         'nh3_contribution',
@@ -26,8 +26,8 @@ class Co2eData extends Model
         'co_mg_m3',
         'nh3_mg_m3',
         'no2_mg_m3',
-        // Total CO2e dalam mg/m³
-        'co2e_mg_m3',
+        // Total CO2e dalam g/km
+        'co2e_g_km',
     ];
 
     protected $casts = [
@@ -42,7 +42,7 @@ class Co2eData extends Model
         'co_mg_m3' => 'float',
         'nh3_mg_m3' => 'float',
         'no2_mg_m3' => 'float',
-        'co2e_mg_m3' => 'float',
+        'co2e_g_km' => 'float',
     ];
 
     /**
@@ -96,16 +96,16 @@ class Co2eData extends Model
     }
 
     /**
-     * Hitung total emisi dalam kg berdasarkan mg/m³
+     * Hitung total emisi dalam kg berdasarkan g/km
      */
     public function getEmissionInKgAttribute()
     {
-        // Konversi langsung dari mg/m³ ke kg
-        return self::convertMgM3ToKg($this->co2e_mg_m3 ?? 0);
+        // Konversi langsung dari g/km ke kg
+        return self::convertMgM3ToKg($this->co2e_g_km ?? 0);
     }
 
     /**
-     * 🔥 STATIC METHOD: Hitung akumulasi CO2e harian untuk device (menggunakan mg/m³)
+     * 🔥 STATIC METHOD: Hitung akumulasi CO2e harian untuk device (menggunakan g/km)
      */
     public static function getDailyAccumulation($deviceId, $date = null)
     {
@@ -115,10 +115,10 @@ class Co2eData extends Model
                      ->whereDate('timestamp', $date)
                      ->selectRaw('
                          COUNT(*) as record_count,
-                         SUM(co2e_mg_m3) as total_co2e_mg_m3,
-                         AVG(co2e_mg_m3) as avg_co2e_mg_m3,
-                         MAX(co2e_mg_m3) as max_co2e_mg_m3,
-                         MIN(co2e_mg_m3) as min_co2e_mg_m3,
+                         SUM(co2e_g_km) as total_co2e_g_km,
+                         AVG(co2e_g_km) as avg_co2e_g_km,
+                         MAX(co2e_g_km) as max_co2e_g_km,
+                         MIN(co2e_g_km) as min_co2e_g_km,
                          MAX(timestamp) as last_reading
                      ')
                      ->first();
@@ -127,17 +127,17 @@ class Co2eData extends Model
             'device_id' => $deviceId,
             'date' => $date->format('Y-m-d'),
             'record_count' => $result->record_count ?? 0,
-            'total_co2e_mg_m3' => round($result->total_co2e_mg_m3 ?? 0, 2),
-            'avg_co2e_mg_m3' => round($result->avg_co2e_mg_m3 ?? 0, 2),
-            'max_co2e_mg_m3' => round($result->max_co2e_mg_m3 ?? 0, 2),
-            'min_co2e_mg_m3' => round($result->min_co2e_mg_m3 ?? 0, 2),
-            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_mg_m3 ?? 0),
+            'total_co2e_g_km' => round($result->total_co2e_g_km ?? 0, 2),
+            'avg_co2e_g_km' => round($result->avg_co2e_g_km ?? 0, 2),
+            'max_co2e_g_km' => round($result->max_co2e_g_km ?? 0, 2),
+            'min_co2e_g_km' => round($result->min_co2e_g_km ?? 0, 2),
+            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_g_km ?? 0),
             'last_reading' => $result->last_reading,
         ];
     }
 
     /**
-     * 🔥 STATIC METHOD: Hitung akumulasi CO2e bulanan untuk device (menggunakan mg/m³)
+     * 🔥 STATIC METHOD: Hitung akumulasi CO2e bulanan untuk device (menggunakan g/km)
      */
     public static function getMonthlyAccumulation($deviceId, $month = null, $year = null)
     {
@@ -149,10 +149,10 @@ class Co2eData extends Model
                      ->whereYear('timestamp', $year)
                      ->selectRaw('
                          COUNT(*) as record_count,
-                         SUM(co2e_mg_m3) as total_co2e_mg_m3,
-                         AVG(co2e_mg_m3) as avg_co2e_mg_m3,
-                         MAX(co2e_mg_m3) as max_co2e_mg_m3,
-                         MIN(co2e_mg_m3) as min_co2e_mg_m3,
+                         SUM(co2e_g_km) as total_co2e_g_km,
+                         AVG(co2e_g_km) as avg_co2e_g_km,
+                         MAX(co2e_g_km) as max_co2e_g_km,
+                         MIN(co2e_g_km) as min_co2e_g_km,
                          MAX(timestamp) as last_reading
                      ')
                      ->first();
@@ -162,27 +162,27 @@ class Co2eData extends Model
             'month' => $month,
             'year' => $year,
             'record_count' => $result->record_count ?? 0,
-            'total_co2e_mg_m3' => round($result->total_co2e_mg_m3 ?? 0, 2),
-            'avg_co2e_mg_m3' => round($result->avg_co2e_mg_m3 ?? 0, 2),
-            'max_co2e_mg_m3' => round($result->max_co2e_mg_m3 ?? 0, 2),
-            'min_co2e_mg_m3' => round($result->min_co2e_mg_m3 ?? 0, 2),
-            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_mg_m3 ?? 0),
+            'total_co2e_g_km' => round($result->total_co2e_g_km ?? 0, 2),
+            'avg_co2e_g_km' => round($result->avg_co2e_g_km ?? 0, 2),
+            'max_co2e_g_km' => round($result->max_co2e_g_km ?? 0, 2),
+            'min_co2e_g_km' => round($result->min_co2e_g_km ?? 0, 2),
+            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_g_km ?? 0),
             'last_reading' => $result->last_reading,
         ];
     }
 
     /**
-     * 🔥 STATIC METHOD: Hitung akumulasi CO2e total untuk device (menggunakan mg/m³)
+     * 🔥 STATIC METHOD: Hitung akumulasi CO2e total untuk device (menggunakan g/km)
      */
     public static function getTotalAccumulation($deviceId)
     {
         $result = self::where('device_id', $deviceId)
                      ->selectRaw('
                          COUNT(*) as record_count,
-                         SUM(co2e_mg_m3) as total_co2e_mg_m3,
-                         AVG(co2e_mg_m3) as avg_co2e_mg_m3,
-                         MAX(co2e_mg_m3) as max_co2e_mg_m3,
-                         MIN(co2e_mg_m3) as min_co2e_mg_m3,
+                         SUM(co2e_g_km) as total_co2e_g_km,
+                         AVG(co2e_g_km) as avg_co2e_g_km,
+                         MAX(co2e_g_km) as max_co2e_g_km,
+                         MIN(co2e_g_km) as min_co2e_g_km,
                          MAX(timestamp) as last_reading,
                          MIN(timestamp) as first_reading
                      ')
@@ -191,25 +191,25 @@ class Co2eData extends Model
         return [
             'device_id' => $deviceId,
             'record_count' => $result->record_count ?? 0,
-            'total_co2e_mg_m3' => round($result->total_co2e_mg_m3 ?? 0, 2),
-            'avg_co2e_mg_m3' => round($result->avg_co2e_mg_m3 ?? 0, 2),
-            'max_co2e_mg_m3' => round($result->max_co2e_mg_m3 ?? 0, 2),
-            'min_co2e_mg_m3' => round($result->min_co2e_mg_m3 ?? 0, 2),
-            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_mg_m3 ?? 0),
+            'total_co2e_g_km' => round($result->total_co2e_g_km ?? 0, 2),
+            'avg_co2e_g_km' => round($result->avg_co2e_g_km ?? 0, 2),
+            'max_co2e_g_km' => round($result->max_co2e_g_km ?? 0, 2),
+            'min_co2e_g_km' => round($result->min_co2e_g_km ?? 0, 2),
+            'total_emissions_kg' => self::convertMgM3ToKg($result->total_co2e_g_km ?? 0),
             'first_reading' => $result->first_reading,
             'last_reading' => $result->last_reading,
         ];
     }
 
     /**
-     * 🔥 STATIC METHOD: Konversi mg/m³ ke kg (formula baru sesuai Arduino)
-     * Langsung dari mg/m³ ke kg tanpa konversi PPM
+     * 🔥 STATIC METHOD: Konversi g/km ke kg (formula baru sesuai Arduino)
+     * Langsung dari g/km ke kg tanpa konversi PPM
      */
     public static function convertMgM3ToKg($mgM3, $volumeM3 = 1)
     {
-        // Langkah: Konversi mg/m³ ke kg dengan volume
+        // Langkah: Konversi g/km ke kg dengan volume
         // 1 mg = 0.000001 kg
-        // Emisi (kg) = Emisi (mg/m³) × Volume (m³) × 0.000001
+        // Emisi (kg) = Emisi (g/km) × Volume (m³) × 0.000001
         // $emisiKg = $mgM3 * $volumeM3 * 0.000001;
         $emisiKg = $mgM3 * $volumeM3 * 0.0005;
         

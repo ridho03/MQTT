@@ -106,14 +106,14 @@ class MqttDataService
                 'device_id' => $deviceId,
                 'raw_timestamp' => $data['timestamp'] ?? null,
                 'parsed_timestamp' => $timestamp,
-                'co2e_mg_m3' => $data['co2e_mg_m3'] ?? 0
+                'co2e_g_km' => $data['co2e_g_km'] ?? 0
             ]);
 
             // Simpan CO2e data (sesuai schema baru - CO, NH3, NO2)
             $co2eData = Co2eData::create([
                 'device_id' => $deviceId,
                 'timestamp' => $timestamp,
-                'co2e_mg_m3' => $data['co2e_mg_m3'] ?? 0,
+                'co2e_g_km' => $data['co2e_g_km'] ?? 0,
                 // Arduino menggunakan CO, NH3, NO2 - tidak ada CO2, CH4, N2O langsung
                 'co_contribution' => $contributors['co_mg_m3'] ?? null,
                 'nh3_contribution' => $contributors['nh3_mg_m3'] ?? null,
@@ -132,7 +132,7 @@ class MqttDataService
 
             DB::commit();
 
-            Log::info("✅ CO2e data berhasil diproses untuk device: {$deviceId}, CO2e: {$data['co2e_mg_m3']} mg/m³, Timestamp: {$timestamp}");
+            Log::info("✅ CO2e data berhasil diproses untuk device: {$deviceId}, CO2e: {$data['co2e_g_km']} g/km, Timestamp: {$timestamp}");
             return $co2eData;
 
         } catch (\Exception $e) {
@@ -242,12 +242,12 @@ class MqttDataService
         
         if ($carbonCredit) {
             Log::info("🔥 MULAI UPDATE CARBON CREDIT untuk device: {$deviceId}", [
-                'new_co2e_mg_m3' => $co2eData->co2e_mg_m3,
+                'new_co2e_g_km' => $co2eData->co2e_g_km,
                 'timestamp' => $co2eData->timestamp
             ]);
 
-            // Update CO2e mg/m³ terbaru (untuk display real-time)
-            $carbonCredit->current_co2e_mg_m3 = $co2eData->co2e_mg_m3;
+            // Update CO2e g/km terbaru (untuk display real-time)
+            $carbonCredit->current_co2e_g_km = $co2eData->co2e_g_km;
             $carbonCredit->last_sensor_update = $co2eData->timestamp;
             
             // 🔥 HITUNG AKUMULASI HARIAN MENGGUNAKAN METHOD HELPER
@@ -255,9 +255,9 @@ class MqttDataService
             $carbonCredit->daily_emissions_kg = $dailyAccumulation['total_emissions_kg'];
             
             Log::info("📊 AKUMULASI HARIAN untuk device {$deviceId}:", [
-                'total_co2e_mg_m3' => $dailyAccumulation['total_co2e_mg_m3'],
+                'total_co2e_g_km' => $dailyAccumulation['total_co2e_g_km'],
                 'record_count' => $dailyAccumulation['record_count'],
-                'avg_co2e_mg_m3' => $dailyAccumulation['avg_co2e_mg_m3'],
+                'avg_co2e_g_km' => $dailyAccumulation['avg_co2e_g_km'],
                 'total_emissions_kg' => $dailyAccumulation['total_emissions_kg']
             ]);
             
@@ -266,7 +266,7 @@ class MqttDataService
             $carbonCredit->monthly_emissions_kg = $monthlyAccumulation['total_emissions_kg'];
             
             Log::info("📊 AKUMULASI BULANAN untuk device {$deviceId}:", [
-                'total_co2e_mg_m3' => $monthlyAccumulation['total_co2e_mg_m3'],
+                'total_co2e_g_km' => $monthlyAccumulation['total_co2e_g_km'],
                 'record_count' => $monthlyAccumulation['record_count'],
                 'total_emissions_kg' => $monthlyAccumulation['total_emissions_kg']
             ]);
@@ -276,7 +276,7 @@ class MqttDataService
             $carbonCredit->total_emissions_kg = $totalAccumulation['total_emissions_kg'];
             
             Log::info("📊 AKUMULASI TOTAL untuk device {$deviceId}:", [
-                'total_co2e_mg_m3' => $totalAccumulation['total_co2e_mg_m3'],
+                'total_co2e_g_km' => $totalAccumulation['total_co2e_g_km'],
                 'record_count' => $totalAccumulation['record_count'],
                 'total_emissions_kg' => $totalAccumulation['total_emissions_kg']
             ]);
@@ -293,8 +293,8 @@ class MqttDataService
             $carbonCredit->save();
             
             Log::info("✅ CARBON CREDIT BERHASIL DIUPDATE untuk device {$deviceId}:", [
-                'current_co2e_mg_m3' => $co2eData->co2e_mg_m3,
-                'daily_total_mg_m3' => $dailyAccumulation['total_co2e_mg_m3'],
+                'current_co2e_g_km' => $co2eData->co2e_g_km,
+                'daily_total_mg_m3' => $dailyAccumulation['total_co2e_g_km'],
                 'daily_emissions_kg' => $carbonCredit->daily_emissions_kg,
                 'monthly_emissions_kg' => $carbonCredit->monthly_emissions_kg,
                 'total_emissions_kg' => $carbonCredit->total_emissions_kg,
@@ -544,11 +544,11 @@ class MqttDataService
         
         return [
         'total_records' => $query->count(),
-        'avg_co2e_mg_m3' => $query->avg('co2e_mg_m3'),
-        'max_co2e_mg_m3' => $query->max('co2e_mg_m3'),
-        'min_co2e_mg_m3' => $query->min('co2e_mg_m3'),
+        'avg_co2e_g_km' => $query->avg('co2e_g_km'),
+        'max_co2e_g_km' => $query->max('co2e_g_km'),
+        'min_co2e_g_km' => $query->min('co2e_g_km'),
         'total_emissions_kg' => $query->get()->sum(function ($data) {
-            return Co2eData::convertMgM3ToKg($data->co2e_mg_m3);}),
+            return Co2eData::convertMgM3ToKg($data->co2e_g_km);}),
         ];
     }
 
@@ -583,7 +583,7 @@ class MqttDataService
             $co2eCalculation = $this->carbonCalculationService->calculateCo2Equivalent($sensorData);
 
             Log::info("✅ Perhitungan CO2e selesai", [
-                'co2e_mg_m3' => $co2eCalculation['co2e_mg_m3'],
+                'co2e_g_km' => $co2eCalculation['co2e_g_km'],
                 'contributors' => $co2eCalculation['contributors']
             ]);
 
@@ -591,7 +591,7 @@ class MqttDataService
             $co2eData = Co2eData::create([
                 'device_id' => $co2eCalculation['device_id'],
                 'timestamp' => $this->parseTimestamp($co2eCalculation['timestamp']),
-                'co2e_mg_m3' => $co2eCalculation['co2e_mg_m3'],
+                'co2e_g_km' => $co2eCalculation['co2e_g_km'],
                 // Arduino menggunakan CO, NH3, NO2 - tidak ada CO2, CH4, N2O langsung
                 'co_contribution' => $co2eCalculation['contributors']['co_contribution'],
                 'nh3_contribution' => $co2eCalculation['contributors']['nh3_contribution'],
@@ -610,9 +610,9 @@ class MqttDataService
             // Update carbon credit dengan data CO2e yang baru dihitung
             $this->updateCarbonCreditFromCo2e($sensorData->device_id, $co2eData);
 
-            Log::info("🎉 CO2e berhasil dihitung otomatis untuk device {$sensorData->device_id}: {$co2eCalculation['co2e_mg_m3']} mg/m³", [
+            Log::info("🎉 CO2e berhasil dihitung otomatis untuk device {$sensorData->device_id}: {$co2eCalculation['co2e_g_km']} g/km", [
                 'device_id' => $sensorData->device_id,
-                'co2e_mg_m3' => $co2eCalculation['co2e_mg_m3'],
+                'co2e_g_km' => $co2eCalculation['co2e_g_km'],
                 'contributors' => $co2eCalculation['contributors'],
                 'calculation_method' => 'auto_from_sensor_data',
                 'database_id' => $co2eData->id
