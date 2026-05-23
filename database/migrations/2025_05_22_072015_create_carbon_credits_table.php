@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Buat tabel baru dengan kolom tambahan
         Schema::create('carbon_credits', function (Blueprint $table) {
             $table->id();
             $table->foreignId('owner_id')->constrained('users');
@@ -20,16 +19,17 @@ return new class extends Migration
             $table->string('vehicle_type')->nullable();
             $table->decimal('amount', 15, 2)->nullable();
             $table->decimal('price_per_unit', 15, 2);
+
             $table->enum('status', [
-                'pending',      // Menunggu persetujuan admin
-                'approved',     // Disetujui admin, bisa request sale
-                'pending_sale', // Mengajukan penjualan, menunggu approval
-                'available',    // Tersedia di marketplace
-                'rejected',     // Ditolak admin
-                'sold'          // Sudah terjual
+                'pending',
+                'approved',
+                'pending_sale',
+                'available',
+                'rejected',
+                'sold'
             ])->default('pending');
 
-            // Kolom baru untuk pengajuan penjualan
+            // Kolom penjualan
             $table->decimal('sale_price_per_unit', 15, 2)->nullable();
             $table->decimal('quantity_to_sell', 10, 2)->nullable();
             $table->text('sale_notes')->nullable();
@@ -39,31 +39,31 @@ return new class extends Migration
             $table->timestamp('sale_rejected_at')->nullable();
             $table->text('sale_rejection_reason')->nullable();
             $table->unsignedBigInteger('sale_rejected_by')->nullable();
-            
+
             $table->foreign('sale_rejected_by')->references('id')->on('users');
-            
-            // Kolom untuk tracking device MQTT
-            $table->string('device_id')->nullable()->index()->after('nomor_rangka_5digit');
-            
-            // Kolom untuk tracking emisi real-time
-            $table->float('current_co2e_g_km')->nullable()->after('device_id');
-            $table->float('total_emissions_kg')->default(0)->after('current_co2e_g_km');
-            $table->float('daily_emissions_kg')->default(0)->after('total_emissions_kg');
-            $table->float('monthly_emissions_kg')->default(0)->after('daily_emissions_kg');
-            
-            // Kolom untuk tracking lokasi terakhir
-            $table->double('last_latitude', 10, 8)->nullable()->after('monthly_emissions_kg');
-            $table->double('last_longitude', 11, 8)->nullable()->after('last_latitude');
-            $table->float('last_speed_kmph')->nullable()->after('last_longitude');
-            
-            // Kolom untuk tracking status sensor
-            $table->timestamp('last_sensor_update')->nullable()->after('last_speed_kmph');
-            $table->enum('sensor_status', ['active', 'inactive', 'error'])->default('inactive')->after('last_sensor_update');
-            
-            // Kolom untuk automatic carbon credit adjustment
-            $table->boolean('auto_adjustment_enabled')->default(true)->after('sensor_status');
-            $table->float('emission_threshold_kg')->default(100)->after('auto_adjustment_enabled'); // threshold untuk adjustment otomatis
-            
+
+            // MQTT device
+            $table->string('device_id')->nullable()->index();
+
+            // Emisi
+            $table->float('current_co2e_g_km')->nullable();
+            $table->float('total_emissions_kg')->default(0);
+            $table->float('daily_emissions_kg')->default(0);
+            $table->float('monthly_emissions_kg')->default(0);
+
+            // Lokasi
+            $table->double('last_latitude', 10, 8)->nullable();
+            $table->double('last_longitude', 11, 8)->nullable();
+            $table->float('last_speed_kmph')->nullable();
+
+            // Sensor
+            $table->timestamp('last_sensor_update')->nullable();
+            $table->enum('sensor_status', ['active', 'inactive', 'error'])->default('inactive');
+
+            // Auto adjustment
+            $table->boolean('auto_adjustment_enabled')->default(true);
+            $table->float('emission_threshold_kg')->default(100);
+
             $table->timestamps();
         });
     }

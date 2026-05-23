@@ -19,6 +19,25 @@ buka aplikasi ngrok aplication
 ngrok http 8000
 
 
+jalnakan local 
+http://localhost/cobaMQTT/public/
+
+log activity
+C:\xampp\apache\logs> 
+code : Get-Content access.log -Tail 10
+Get-Content access.log -Tail 10 -Wait
+
+running manual mosquiito
+win+R 
+lalu masukan services.msc
+
+jalankan python untuk tets
+python mqtt_stress_test.py
+
+
+
+
+
 login user
 user1@gmail.com
 11111111

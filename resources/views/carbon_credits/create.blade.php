@@ -123,7 +123,7 @@
         <div class="mb-4">
             <label class="block font-semibold mb-1">Harga per Unit (Rp)</label>
             <div class="w-full rounded border border-gray-300 px-3 py-2">
-                Rp 100
+                Rp 30
             </div>
         </div>
 

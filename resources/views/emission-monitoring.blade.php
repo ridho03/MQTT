@@ -16,11 +16,6 @@
                 <i class="fas fa-sync-alt"></i>
                 <span>Refresh</span>
             </button>
-            <a href="/report/device/001/csv"
-   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-    <i class="fas fa-download"></i>
-    Download CSV
-</a>
         </div>
     </div>
 
@@ -113,14 +108,14 @@
                     <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span class="text-sm text-gray-600">Aktif</span>
                 </div>
-                <div class="flex items-center space-x-2">
+                <!-- <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <span class="text-sm text-gray-600">Idle</span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-red-500 rounded-full"></div>
                     <span class="text-sm text-gray-600">Error</span>
-                </div>
+                </div> -->
                 <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
                     <span class="text-sm text-gray-600">Offline</span>
@@ -216,10 +211,34 @@
                             {{ $credit->last_sensor_update ? \Carbon\Carbon::parse($credit->last_sensor_update)->diffForHumans() : 'Never' }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <button onclick="viewDeviceDetails('{{ $credit->device_id }}')" 
-                                    class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                Detail
-                            </button>
+                            <div class="flex items-center gap-2">
+
+        <!-- DETAIL BUTTON -->
+        <button
+            type="button"
+            onclick="viewDeviceDetails('{{ $credit->device_id }}')"
+            class="inline-flex items-center gap-1 px-3 py-1.5 
+                   bg-blue-50 text-blue-600 
+                   hover:bg-blue-100 hover:text-blue-700
+                   rounded-lg text-sm font-medium
+                   transition duration-200">
+
+            <i class="fas fa-eye text-xs"></i>
+            <span>Detail</span>
+        </button>
+
+        <!-- CSV BUTTON -->
+        <a href="{{ url('/report/device/'.$credit->device_id.'/csv') }}"
+           class="inline-flex items-center gap-1 px-3 py-1.5
+                  bg-green-600 hover:bg-green-700
+                  text-white rounded-lg text-sm font-medium
+                  shadow-sm transition duration-200">
+
+            <i class="fas fa-download text-xs"></i>
+            <span>CSV</span>
+        </a> 
+
+    </div>
                         </td>
                     </tr>
                     @endif

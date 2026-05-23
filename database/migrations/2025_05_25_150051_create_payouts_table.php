@@ -10,13 +10,17 @@ return new class extends Migration
     {
         Schema::create('payouts', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('transaction_id')->nullable();
             $table->unsignedBigInteger('user_id');
+
             $table->string('payout_id');
             $table->string('midtrans_payout_id')->nullable();
             $table->text('midtrans_response')->nullable();
-            $table->decimal('amount', 15, 2); // jumlah karbon yang dibeli
+
+            $table->decimal('amount', 15, 2);
             $table->decimal('net_amount', 10, 2);
+
             $table->enum('status', [
                 'pending',
                 'created',
@@ -24,13 +28,23 @@ return new class extends Migration
                 'completed',
                 'failed'
             ])->default('pending');
-            $table->timestamp('processed_at')->nullable()->after('status');
-            $table->text('notes')->nullable()->after('status');
-            // Tambahkan kolom lain yang diperlukan
+
+            // ✅ FIX (hapus after)
+            $table->timestamp('processed_at')->nullable();
+            $table->text('notes')->nullable();
+
             $table->timestamps();
 
-            $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // FOREIGN KEY
+            $table->foreign('transaction_id')
+                ->references('id')
+                ->on('transactions')
+                ->onDelete('cascade');
+
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
         });
     }
 
