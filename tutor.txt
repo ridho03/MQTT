@@ -34,7 +34,7 @@ lalu masukan services.msc
 jalankan python untuk tets
 python mqtt_stress_test.py
 
-
+capture wireshark publish : mqtt.msgtype == 3
 
 
 
@@ -57,3 +57,75 @@ buka file C:\xampp\htdocs\mqtt
 open with terminal
 run : php mqtt_data_sub.php
 
+untuk test broker
+pakai php broker_test.php
+
+buat keamanan mmosqutto autentikasi
+buka cmd masuk ke file mosquiito
+ketik : mosquitto_passwd -c password.txt mqttuser (untuk buat password)
+pass : 12345678
+
+untuk jalankan Authentication Server
+mosquitto -c mosquitto.conf -v
+
+ambil 10 data terakhir dari database pakai ini
+sensor data
+SELECT
+id,
+device_id,
+device_timestamp,
+humidity,
+temperature_c,
+co_ppm,
+created_at
+FROM sensor_data
+ORDER BY id DESC
+LIMIT 10;
+
+untuk gps
+SELECT
+device_id,
+latitude,
+longitude,
+speed_kmph
+FROM gps_data
+ORDER BY id DESC
+LIMIT 10;
+
+
+untuk hapus data pada tabel pakai ini
+sensor data
+DELETE FROM sensor_data
+WHERE device_id >= '002';
+
+DELETE FROM gps_data
+WHERE device_id >= '002';
+
+DELETE FROM co2e_data
+WHERE device_id >= '002';
+
+dan verifikasi bahwasannya device_id 002 keatas nilai nya 0
+tinggal ganti nama tabelnya
+SELECT COUNT(*) AS total_gps
+FROM gps_data
+WHERE device_id >= '002';
+
+
+
+untuk verifikasi total payload nya pakai ini
+SELECT
+device_id,
+COUNT(*) AS payload_per_vehicle
+FROM sensor_data
+WHERE device_id>='002'
+GROUP BY device_id
+ORDER BY device_id;
+
+dan bisa ini 
+SELECT COUNT(*) AS total_sensor
+FROM sensor_data
+WHERE device_id >= '002';
+
+
+cek mqtt connect wireshark
+mqtt.msgtype == 1

@@ -1,7 +1,7 @@
 # ============================================================
-# MQTT STRESS TEST PUBLISHER
-# Simulasi pengiriman payload MQTT menggunakan Python
-# Menggantikan Arduino UNO R4 WiFi sebagai publisher
+# MQTT MULTI-VEHICLE STRESS TEST
+# Simulasi pengiriman data MQTT menggunakan
+# 500 kendaraan virtual.
 # ============================================================
 
 import paho.mqtt.client as mqtt
@@ -11,133 +11,321 @@ import random
 
 # ============================================================
 # KONFIGURASI MQTT
-# Samakan dengan konfigurasi Arduino
 # ============================================================
 
-BROKER = "172.20.10.5"          # IP Mosquitto Broker
-PORT = 1883                     # Port MQTT
-TOPIC = "sipk/device1/data"     # Topic MQTT
+BROKER = "127.0.0.1"
 
-# jumlah payload yang akan diuji
-TOTAL_PAYLOAD = 100
+PORT = 1883
 
-# delay antar publish (detik)
-DELAY = 0.01
+TOPIC = "sipk/device1/data"
 
 # ============================================================
-# MEMBUAT MQTT CLIENT
+# KONFIGURASI PENGUJIAN
+# ============================================================
+
+TOTAL_VEHICLES = 500
+
+PAYLOAD_PER_VEHICLE = 1
+
+DELAY = 0.005
+
+# ============================================================
+# MQTT CLIENT
 # ============================================================
 
 client = mqtt.Client()
 
-print("Connecting to broker...")
+# AUTHENTICATION MQTT
+client.username_pw_set(
+    "mqttuser",
+    "12345678"
+)
 
-# koneksi ke broker
-client.connect(BROKER, PORT, 60)
+print("Connecting Broker...")
+
+client.connect(
+    BROKER,
+    PORT,
+    60
+)
 
 print("MQTT CONNECTED\n")
 
 # ============================================================
-# LOOP PENGIRIMAN PAYLOAD
+# COUNTER
 # ============================================================
 
-for i in range(TOTAL_PAYLOAD):
+total_sent = 0
 
-    # --------------------------------------------------------
-    # SIMULASI DATA SENSOR
-    # dibuat random supaya mirip data Arduino asli
-    # --------------------------------------------------------
+success = 0
 
-    humidity = round(random.uniform(70,90),2)
+failed = 0
 
-    tempC = round(random.uniform(29,35),2)
+# ============================================================
+# TIMER START
+# ============================================================
 
-    tempF = round((tempC*9/5)+32,2)
+start_time = time.time()
 
-    coPPM = round(random.uniform(20,35),2)
+# ============================================================
+# LOOP KENDARAAN
+# ============================================================
 
-    nh3PPM = round(random.uniform(1,2),2)
+for vehicle in range(2,502):
 
-    no2PPM = round(random.uniform(0.1,0.5),2)
+    device_id=f"{vehicle:03}"
 
-    hidrocarbon = round(random.uniform(5,10),2)
+    for i in range(PAYLOAD_PER_VEHICLE):
 
-    latitude = -6.200000
+        # ==========================================
+        # SIMULASI DATA SENSOR
+        # ==========================================
 
-    longitude = 106.816666
+        humidity=round(
+            random.uniform(70,90),2
+        )
 
-    speed = round(random.uniform(10,60),2)
+        tempC=round(
+            random.uniform(29,35),2
+        )
 
-    pm = round(random.uniform(0.5,2),2)
+        tempF=round(
+            (tempC*9/5)+32,
+            2
+        )
 
-    flow = round(random.uniform(15,25),2)
+        coPPM=round(
+            random.uniform(20,35),2
+        )
 
-    # waktu realtime
-    date = datetime.now().strftime("%d/%m/%Y")
+        nh3PPM=round(
+            random.uniform(1,2),2
+        )
 
-    current_time = datetime.now().strftime("%H:%M:%S")
+        no2PPM=round(
+            random.uniform(0.1,0.5),2
+        )
 
-    # --------------------------------------------------------
-    # PEMBENTUKAN PAYLOAD CSV
-    # format disamakan dengan Arduino UNO R4 WiFi
-    # --------------------------------------------------------
+        hidrocarbon=round(
+            random.uniform(5,10),2
+        )
 
-    payload = (
+        latitude=-6.200000
 
-        f"001,"                 # device_id
+        longitude=106.816666
 
-        f"{humidity},"
+        speed=round(
+            random.uniform(10,60),2
+        )
 
-        f"{tempC},"
+        pm=round(
+            random.uniform(0.5,2),2
+        )
 
-        f"{tempF},"
+        flow=round(
+            random.uniform(15,25),2
+        )
 
-        f"{coPPM},"
+        date=datetime.now().strftime(
+            "%d/%m/%Y"
+        )
 
-        f"{nh3PPM},"
+        current_time=datetime.now().strftime(
+            "%H:%M:%S"
+        )
 
-        f"{no2PPM},"
+        # ==========================================
+        # PEMBENTUKAN PAYLOAD CSV
+        # ==========================================
 
-        f"{hidrocarbon},"
+        payload=(
 
-        f"{latitude},"
+            f"{device_id},"
 
-        f"{longitude},"
+            f"{humidity},"
 
-        f"{speed},"
+            f"{tempC},"
 
-        f"{pm},"
+            f"{tempF},"
 
-        f"{flow},"
+            f"{coPPM},"
 
-        f"{date},"
+            f"{nh3PPM},"
 
-        f"{current_time}"
+            f"{no2PPM},"
 
-    )
+            f"{hidrocarbon},"
 
-    # --------------------------------------------------------
-    # MENGHITUNG UKURAN PAYLOAD (BYTE)
-    # untuk analisis komunikasi data
-    # --------------------------------------------------------
+            f"{latitude},"
 
-    payload_size = len(payload.encode('utf-8'))
+            f"{longitude},"
 
-    # --------------------------------------------------------
-    # PUBLISH PAYLOAD KE BROKER MQTT
-    # --------------------------------------------------------
+            f"{speed},"
 
-    client.publish(TOPIC,payload)
+            f"{pm},"
 
-    print(f"[{i+1}] SENT | {payload_size} bytes")
+            f"{flow},"
 
-    # delay antar payload
-    time.sleep(DELAY)
+            f"{date},"
+
+            f"{current_time}"
+
+        )
+
+        # ==========================================
+        # SIZE ANALYSIS
+        # ==========================================
+
+        csv_payload_size = len(
+            payload.encode()
+        )
+
+        topic_size = len(
+            TOPIC.encode()
+        )
+
+        mqtt_header = 2
+
+        mqtt_message_size = (
+
+            csv_payload_size +
+
+            topic_size +
+
+            mqtt_header
+
+        )
+
+        tcp_header = 20
+
+        ip_header = 20
+
+        loopback_header = 26
+
+        network_packet_size = (
+
+            mqtt_message_size +
+
+            tcp_header +
+
+            ip_header +
+
+            loopback_header
+
+        )
+
+        # ==========================================
+        # MQTT PUBLISH
+        # ==========================================
+
+        result = client.publish(
+            TOPIC,
+            payload
+        )
+
+        total_sent +=1
+
+        if(
+            result.rc
+            ==
+            mqtt.MQTT_ERR_SUCCESS
+        ):
+
+            success +=1
+
+        else:
+
+            failed +=1
+
+        # progress output
+
+        if total_sent % 100 == 0:
+
+            print(
+                f"Progress : "
+                f"{total_sent} payload"
+            )
+
+        time.sleep(DELAY)
+
+# ============================================================
+# TIMER STOP
+# ============================================================
+
+end_time=time.time()
+
+duration=end_time-start_time
 
 # ============================================================
 # DISCONNECT
 # ============================================================
 
 client.disconnect()
+
+# ============================================================
+# RESULT
+# ============================================================
+
+print("\n========== TEST RESULT ==========\n")
+
+print(
+f"Vehicle Tested          : "
+f"{TOTAL_VEHICLES}"
+)
+
+print(
+f"Payload/Vehicle         : "
+f"{PAYLOAD_PER_VEHICLE}"
+)
+
+print(
+f"Total Payload           : "
+f"{total_sent}"
+)
+
+print()
+
+print(
+f"Payload Success         : "
+f"{success}"
+)
+
+print(
+f"Payload Failed          : "
+f"{failed}"
+)
+
+print()
+
+print(
+"========== DATA SIZE ANALYSIS ==========\n"
+)
+
+print(
+f"CSV Payload Size        : "
+f"{csv_payload_size} bytes"
+)
+
+print(
+f"MQTT Message Size       : "
+f"{mqtt_message_size} bytes"
+)
+
+print(
+f"Network Packet Size     : "
+f"{network_packet_size} bytes"
+)
+
+print()
+
+print(
+f"Duration                : "
+f"{duration:.2f} sec"
+)
+
+print(
+f"Publish Rate            : "
+f"{total_sent/duration:.2f} payload/sec"
+)
 
 print("\nMQTT DISCONNECTED")
