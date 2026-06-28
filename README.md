@@ -1,61 +1,198 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pengujian Performa MQTT
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Pengujian dilakukan menggunakan program publisher Python (`mqtt_stress_test.py`) untuk mensimulasikan pengiriman data dari 500 kendaraan virtual ke broker MQTT melalui satu koneksi publisher. Data diterima oleh subscriber PHP, kemudian disimpan ke tabel `mqtt_test_results` pada MySQL/MariaDB.
 
-## About Laravel
+Skenario pengujian:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Payload/Kendaraan | Total Payload |
+| ----------------: | ------------: |
+|                 1 |           500 |
+|                 2 |          1000 |
+|                 5 |          2500 |
+|                10 |          5000 |
+|                20 |         10000 |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Parameter yang diukur:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Packet Delivery Ratio (PDR)
+* Packet Loss
+* Latency (Minimum, Average, Maximum)
+* Throughput Subscriber
+* Jitter
+* Publish Rate
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 1. Menampilkan Data Pengujian Terakhir
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```sql
+SELECT *
+FROM mqtt_test_results
+ORDER BY id DESC
+LIMIT 100;
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Menghitung Jumlah Payload yang Diterima
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```sql
+SELECT COUNT(*) AS payload_diterima
+FROM mqtt_test_results
+WHERE run_id = '20260618_163926_272485';
+```
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 3. Menghitung Latency
 
-## Contributing
+```sql
+SELECT
+    run_id,
+    COUNT(*) AS payload_diterima,
+    ROUND(AVG(latency_ms),3) AS latency_rata_rata_ms,
+    ROUND(MIN(latency_ms),3) AS latency_minimum_ms,
+    ROUND(MAX(latency_ms),3) AS latency_maksimum_ms
+FROM mqtt_test_results
+WHERE run_id='20260618_163926_272485'
+GROUP BY run_id;
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 4. Menghitung Packet Delivery Ratio (PDR) dan Packet Loss
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```sql
+SET @payload_dikirim = 500;
 
-## Security Vulnerabilities
+SELECT
+    @payload_dikirim AS payload_dikirim,
+    COUNT(*) AS payload_diterima,
+    @payload_dikirim-COUNT(*) AS payload_hilang,
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    ROUND(
+        COUNT(*)/@payload_dikirim*100,
+        2
+    ) AS pdr_persen,
 
-## License
+    ROUND(
+        (@payload_dikirim-COUNT(*))
+        /@payload_dikirim*100,
+        2
+    ) AS packet_loss_persen
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+FROM mqtt_test_results
+WHERE run_id='20260618_163926_272485';
+```
+
+---
+
+## 5. Menghitung Throughput Subscriber
+
+```sql
+SELECT
+    run_id,
+
+    COUNT(*) AS payload_diterima,
+
+    ROUND(
+        (
+            MAX(receive_timestamp_ns)
+            -
+            MIN(receive_timestamp_ns)
+        )/1000000000,
+        4
+    ) AS durasi_penerimaan_detik,
+
+    ROUND(
+        COUNT(*)/
+        NULLIF(
+            (
+                MAX(receive_timestamp_ns)
+                -
+                MIN(receive_timestamp_ns)
+            )/1000000000,
+            0
+        ),
+        2
+    ) AS laju_penerimaan_payload_per_detik,
+
+    ROUND(
+        SUM(payload_size_bytes)*8/
+        NULLIF(
+            (
+                MAX(receive_timestamp_ns)
+                -
+                MIN(receive_timestamp_ns)
+            )/1000000000,
+            0
+        ),
+        2
+    ) AS throughput_subscriber_bit_per_detik
+
+FROM mqtt_test_results
+WHERE run_id='20260618_163926_272485'
+GROUP BY run_id;
+```
+
+---
+
+## 6. Menghitung Ringkasan Pengujian (PDR, Packet Loss, Latency, Throughput, dan Jitter)
+
+Gunakan query ringkasan yang telah dibuat untuk menghasilkan seluruh parameter pengujian dalam satu hasil, yaitu:
+
+* Payload dikirim
+* Payload diterima
+* Payload hilang
+* Packet Delivery Ratio (PDR)
+* Packet Loss
+* Latency minimum
+* Latency rata-rata
+* Latency maksimum
+* Durasi penerimaan
+* Throughput subscriber
+* Jitter rata-rata
+
+Query ini memanfaatkan Common Table Expression (CTE), fungsi agregasi SQL, dan fungsi `LAG()` untuk menghitung jitter berdasarkan selisih latency antar-payload yang diterima secara berurutan.
+
+---
+
+## 7. Verifikasi Payload Sensor
+
+Jumlah payload yang berhasil disimpan pada tabel sensor dapat diverifikasi menggunakan query berikut.
+
+```sql
+SELECT
+device_id,
+COUNT(*) AS payload_per_vehicle
+FROM sensor_data
+WHERE device_id>='002'
+GROUP BY device_id
+ORDER BY device_id;
+```
+
+atau
+
+```sql
+SELECT COUNT(*) AS total_sensor
+FROM sensor_data
+WHERE device_id>='002';
+```
+
+---
+
+## 8. Verifikasi Menggunakan Wireshark
+
+Filter untuk melihat payload MQTT:
+
+```text
+mqtt.msgtype == 3
+```
+
+Filter untuk melihat proses koneksi MQTT:
+
+```text
+mqtt.msgtype == 1
+```
+
+Wireshark digunakan untuk memverifikasi bahwa payload berhasil dikirim melalui jaringan serta mengamati ukuran frame MQTT selama proses pengujian.
