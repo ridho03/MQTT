@@ -239,6 +239,36 @@ Parameter yang diukur
 
 ---
 
+# Pengambilan Data Hasil Pengujian
+
+Setelah seluruh skenario pengujian selesai dijalankan, data hasil pengujian disimpan secara otomatis oleh subscriber PHP ke dalam tabel `mqtt_test_results` pada basis data MySQL.
+
+Setiap baris data mewakili satu payload yang berhasil diterima dan berisi informasi seperti:
+
+* `run_id`
+* `message_id`
+* `device_id`
+* `payload_number`
+* `send_timestamp_ns`
+* `receive_timestamp_ns`
+* `latency_ms`
+* `payload_size_bytes`
+
+Untuk memperoleh hasil pengujian, buka **phpMyAdmin** atau klien MySQL lainnya, kemudian pilih basis data yang digunakan dan jalankan query SQL sesuai parameter yang akan dianalisis.
+
+Urutan pengambilan data yang digunakan pada penelitian ini adalah sebagai berikut:
+
+1. Menampilkan data hasil pengujian berdasarkan `run_id`.
+2. Menghitung jumlah payload yang diterima.
+3. Menghitung nilai Packet Delivery Ratio (PDR) dan packet loss.
+4. Menghitung latency minimum, rata-rata, dan maksimum.
+5. Menghitung throughput subscriber.
+6. Menghitung jitter rata-rata.
+7. Menghasilkan ringkasan seluruh parameter pengujian menggunakan query SQL.
+
+Hasil perhitungan kemudian digunakan sebagai dasar penyusunan tabel, grafik, dan analisis performa sistem pada penelitian.
+
+
 # Query Pengujian
 
 ## Menampilkan data pengujian
