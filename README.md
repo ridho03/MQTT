@@ -1,6 +1,6 @@
 # SIPK (Sistem Informasi Pemantauan Kendaraan)
 
-SIPK (Sistem Informasi Pemantauan Kendaraan) merupakan aplikasi berbasis Laravel yang dikembangkan untuk memantau data emisi kendaraan secara **real-time** menggunakan teknologi **Internet of Things (IoT)** dan protokol **MQTT**. Sistem menerima data sensor dari perangkat IoT melalui broker MQTT, kemudian subscriber memproses dan menyimpan data ke dalam basis data MySQL/MariaDB sehingga dapat ditampilkan pada dashboard web.
+SIPK (Sistem Informasi Pemantauan Kendaraan) merupakan aplikasi berbasis Laravel yang dikembangkan untuk memantau data emisi kendaraan secara **real-time** menggunakan teknologi **Internet of Things (IoT)** dan protokol **MQTT**. Sistem menerima data sensor dari perangkat IoT melalui broker MQTT, kemudian subscriber memproses dan menyimpan data ke dalam basis data MySQL sehingga dapat ditampilkan pada dashboard web.
 
 ---
 
@@ -28,7 +28,7 @@ IoT Device / Python Publisher
       PHP MQTT Subscriber
             │
             ▼
-      MySQL / MariaDB
+      MySQL 
             │
             ▼
       Laravel Dashboard
@@ -188,19 +188,19 @@ Pengujian dilakukan menggunakan program publisher Python (`mqtt_stress_test.py`)
 Alur pengujian:
 
 ```
-Publisher Python
+  Publisher Python
         │
         ▼
-Broker Mosquitto
+ Broker Mosquitto
         │
         ▼
-Subscriber PHP
+ Subscriber PHP
         │
         ▼
-MySQL / MariaDB
+      MySQL
         │
         ▼
-Query SQL
+    Query SQL
         │
         ▼
 Perhitungan:
