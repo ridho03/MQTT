@@ -129,3 +129,88 @@ WHERE device_id >= '002';
 
 cek mqtt connect wireshark
 mqtt.msgtype == 1
+
+
+cek data
+SELECT * 
+FROM mqtt_test_results
+ORDER BY id DESC
+LIMIT 100;
+
+
+untuk cek berapa banyak data berdasarkan id
+SELECT COUNT(*) AS payload_diterima
+FROM mqtt_test_results
+WHERE run_id = '20260618_163926_272485';
+
+Lihat hasil latency
+SELECT
+    run_id,
+    COUNT(*) AS payload_diterima,
+    ROUND(AVG(latency_ms), 3) AS latency_rata_rata_ms,
+    ROUND(MIN(latency_ms), 3) AS latency_minimum_ms,
+    ROUND(MAX(latency_ms), 3) AS latency_maksimum_ms
+FROM mqtt_test_results
+WHERE run_id = '20260618_163926_272485'
+GROUP BY run_id;
+
+hitung tdr dan paket loss
+SET @payload_dikirim = 500;
+
+SELECT
+    @payload_dikirim AS payload_dikirim,
+    COUNT(*) AS payload_diterima,
+    @payload_dikirim - COUNT(*) AS payload_hilang,
+    ROUND(
+        COUNT(*) / @payload_dikirim * 100,
+        2
+    ) AS pdr_persen,
+    ROUND(
+        (@payload_dikirim - COUNT(*))
+        / @payload_dikirim * 100,
+        2
+    ) AS packet_loss_persen
+FROM mqtt_test_results
+WHERE run_id = '20260618_163926_272485';
+
+
+Hitung throughput sisi subscriber
+SELECT
+    run_id,
+    COUNT(*) AS payload_diterima,
+
+    ROUND(
+        (
+            MAX(receive_timestamp_ns)
+            - MIN(receive_timestamp_ns)
+        ) / 1000000000,
+        4
+    ) AS durasi_penerimaan_detik,
+
+    ROUND(
+        COUNT(*) /
+        NULLIF(
+            (
+                MAX(receive_timestamp_ns)
+                - MIN(receive_timestamp_ns)
+            ) / 1000000000,
+            0
+        ),
+        2
+    ) AS laju_penerimaan_payload_per_detik,
+
+    ROUND(
+        SUM(payload_size_bytes) * 8 /
+        NULLIF(
+            (
+                MAX(receive_timestamp_ns)
+                - MIN(receive_timestamp_ns)
+            ) / 1000000000,
+            0
+        ),
+        2
+    ) AS throughput_subscriber_bit_per_detik
+
+FROM mqtt_test_results
+WHERE run_id = '20260618_163926_272485'
+GROUP BY run_id;
